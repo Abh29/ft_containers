@@ -1,3 +1,4 @@
+#pragma once
 #ifndef __FT_ITERATORs__
 #define __FT_ITERATORs__
 
@@ -98,6 +99,37 @@ struct is_integral: public is_integral_helper<T> {};
 template<bool Cond, class T = void> struct enable_if {};
 template<class T> struct enable_if<true, T> { typedef T type; };
 
+
+//distance
+template<class It>
+typename ft::iterator_traits<It>::difference_type 
+    do_distance(It first, It last, ft::input_iterator_tag)
+{
+    typename ft::iterator_traits<It>::difference_type result = 0;
+    while (first != last) {
+        ++first;
+        ++result;
+    }
+    return result;
+}
+
+template<class It>
+typename ft::iterator_traits<It>::difference_type 
+    do_distance(It first, It last, ft::random_access_iterator_tag)
+{
+    return last - first;
+}
+
+
+template<class It>
+typename ft::iterator_traits<It>::difference_type 
+    distance(It first, It last)
+{
+    return ft::do_distance(first, last, typename ft::iterator_traits<It>::iterator_category());
+}
+
+
+
 //pair
 template<class T1, class T2>
 struct pair {
@@ -181,12 +213,12 @@ protected:
 
 public:
 
-    iterator() : _elm(ft_nullptr) {};
+    iterator() : _elm(ft::ft_nullptr) {};
     iterator(pointer elm): _elm(elm) {};
-    iterator(iterator<class C, class U> other) : _elm(other._elm) {};
+    iterator(iterator& other) : _elm(other._elm) {};
     iterator& operator= (const iterator& other) {
         if (other == *this)
-            return;
+            return *this;
         _elm = other._elm;
         return *this;
     }
