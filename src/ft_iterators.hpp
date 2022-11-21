@@ -1,9 +1,9 @@
 #ifndef __FT_ITERATORs__
 #define __FT_ITERATORs__
 
+#include "ft_utils.hpp"
 #include <cstddef>
 #include <memory>
-#include <type_traits>
 
 
 namespace ft {
@@ -53,7 +53,7 @@ struct integral_constant
     static const T                      value = _v;
     typedef T                           value_type;
     typedef integral_constant<T, _v>    type;
-    operator value_type() const noexcept { return value; }
+    operator value_type() const { return value; };
 };
 
 template<bool _v>
@@ -74,10 +74,6 @@ template<>
 struct is_integral_helper<unsigned char>: public true_type{};
 template<>
 struct is_integral_helper<wchar_t>: public true_type{};
-template<>
-struct is_integral_helper<char16_t>: public true_type{};
-template<>
-struct is_integral_helper<char32_t>: public true_type{};
 template<>
 struct is_integral_helper<short>: public true_type{};
 template<>
@@ -172,11 +168,51 @@ template<class Category, class T, class Distance = std::ptrdiff_t,
 struct iterator {
 
 public:
-    Category            iterator_category;
-    T                   value_type;
-    Distance            difference_type;
-    Pointer             pointer;
-    Reference           reference;
+
+    typedef Category            iterator_category;
+    typedef T                   value_type;
+    typedef Distance            difference_type;
+    typedef Pointer             pointer;
+    typedef Reference           reference;
+
+
+protected:
+    pointer                     _elm;
+
+public:
+
+    iterator() : _elm(ft_nullptr) {};
+    iterator(pointer elm): _elm(elm) {};
+    iterator(iterator<class C, class U> other) : _elm(other._elm) {};
+    iterator& operator= (const iterator& other) {
+        if (other == *this)
+            return;
+        _elm = other._elm;
+        return *this;
+    }
+
+    virtual ~iterator();
+
+    pointer base() const {return _elm; };
+    void swap(iterator& a, iterator& b) {
+        pointer tmp = a.base();
+        a._elm = b._elm;
+        b._elm = tmp;
+    };
+
+    reference operator*(void) const {return *_elm;};
+    pointer operator->(void) {return &(*base()); };
+
+    iterator& operator++ () {
+        ++_elm;
+        return *this;
+    }
+
+    iterator& operator++ (int) {
+        pointer tmp = _elm;
+        ++_elm;
+        return iterator(tmp);
+    }
 
 };
 
@@ -185,6 +221,7 @@ public:
 template< class Iter >
 class reverse_iterator {
 
+public:
     typedef Iter                                                    iterator_type;
     typedef typename ft::iterator_traits<Iter>::iterator_category   iterator_category;
     typedef typename ft::iterator_traits<Iter>::value_type          value_type;
@@ -210,25 +247,128 @@ public:
     };
 
     pointer operator->() const {
-        return &(operator*());
+        Iter tmp = current;
+        --tmp;
+        return to_pointer(tmp);
     };
 
     reference operator[]( difference_type n ) const {
-        return base()[-n - 1];
+        return *(*this + n);
+    };
+
+    reverse_iterator& operator++(){
+        --current;
+        return *this;
+    };
+
+    reverse_iterator& operator--() {
+        ++current;
+        return *this;
+    };
+
+    reverse_iterator operator++( int ) {
+        reverse_iterator tmp = *this;
+        ++current;
+        return tmp;
+    };
+
+    reverse_iterator operator--( int ) {
+        reverse_iterator tmp = *this;
+        ++current;
+        return tmp;
+    };
+
+    reverse_iterator operator+( difference_type n ) const {
+        return reverse_iterator(current - n);
+    };
+
+    reverse_iterator operator-( difference_type n ) const {
+        return reverse_iterator(current + n);
+    };
+
+    reverse_iterator& operator+=( difference_type n ) {
+        current -= n;
+        return *this;
+    }
+
+    reverse_iterator& operator-=( difference_type n ) {
+        current += n;
+        return *this;
     };
 
 
+ private:
+    template<typename _Tp>
+	static  _Tp* to_pointer(_Tp* __p) { return __p; }
+
+    template<typename _Tp>
+	static pointer to_pointer(_Tp __t) { return __t.operator->(); }
 
 };
-	
+
+template< class Iterator1, class Iterator2 >
+bool operator==( const ft::reverse_iterator<Iterator1>& lhs,
+                 const ft::reverse_iterator<Iterator2>& rhs ) {
+                    return lhs.base() == rhs.base();
+                 };
+
+template< class Iterator1, class Iterator2 >
+bool operator!=( const ft::reverse_iterator<Iterator1>& lhs,
+                 const ft::reverse_iterator<Iterator2>& rhs ) {
+                    return lhs.base() != rhs.base();
+                 };
+
+template< class Iterator1, class Iterator2 >
+bool operator<( const ft::reverse_iterator<Iterator1>& lhs,
+                 const ft::reverse_iterator<Iterator2>& rhs ) {
+                    return lhs.base() > rhs.base();
+                 };
+
+template< class Iterator1, class Iterator2 >
+bool operator<=( const ft::reverse_iterator<Iterator1>& lhs,
+                 const ft::reverse_iterator<Iterator2>& rhs ) {
+                    return lhs.base() >= rhs.base();
+                 };
+
+template< class Iterator1, class Iterator2 >
+bool operator>( const ft::reverse_iterator<Iterator1>& lhs,
+                 const ft::reverse_iterator<Iterator2>& rhs ) {
+                    return lhs.base() < rhs.base();
+                 };
+
+template< class Iterator1, class Iterator2 >
+bool operator>=( const ft::reverse_iterator<Iterator1>& lhs,
+                 const ft::reverse_iterator<Iterator2>& rhs ) {
+                    return lhs.base() <= rhs.base();
+                 };
+
+
+template< class Iter >
+reverse_iterator<Iter>
+     operator+( typename reverse_iterator<Iter>::difference_type n,
+                const reverse_iterator<Iter>& it ) {
+                    return reverse_iterator<Iter>(it.base() - n);
+                };
+
+template< class Iterator1, class Iterator2 >
+typename reverse_iterator<Iterator1>::difference_type
+    operator-( const reverse_iterator<Iterator1>& lhs,
+               const reverse_iterator<Iterator2>& rhs ) {
+                    return rhs.base() - lhs.base();
+               };
 
 
 
 
 
 
-}
 
 
+
+
+
+
+
+}; //ft
 
 #endif //__FT_ITERATORs__

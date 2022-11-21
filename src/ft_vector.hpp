@@ -10,6 +10,8 @@
 #include <stdexcept>
 #include <string>
 #include "ft_utils.hpp"
+#include "ft_iterators.hpp"
+#include <string>
 
 #define Max(a, b) (a > b ? a : b)
 
@@ -19,7 +21,8 @@ namespace ft {
 
 
 template<typename T, typename Allocator = std::allocator<T> > class vector {
-  
+
+public:
     //Member types  
     typedef T                                       value_type;
     typedef Allocator                               allocator_type;
@@ -29,10 +32,10 @@ template<typename T, typename Allocator = std::allocator<T> > class vector {
     typedef const value_type&                       const_reference ;
     typedef typename Allocator::pointer             pointer;
     typedef typename Allocator::const_pointer       const_pointer;
-    typedef void*                                   iterator;       //TODO: change this to LegacyRandomAccessIterator
-    typedef const void*                             const_iterator;
-    typedef void*                                   reverse_iterator;
-    typedef const void*                             const_reverse_iterator;
+    typedef pointer                                 iterator;       //TODO: change this to LegacyRandomAccessIterator
+    typedef const_pointer                           const_iterator;
+    typedef ft::reverse_iterator<iterator>          reverse_iterator;
+    typedef ft::reverse_iterator<const_iterator>    const_reverse_iterator;
 
 private:
         allocator_type  _allocator;
@@ -61,12 +64,13 @@ public:
 
     explicit vector( size_type count, const T& value = T(), const Allocator& alloc = Allocator()):
     _allocator(alloc),
-    _start(alloc.allocate(count)),
+    _start(_allocator.allocate(count)),
     _end(_start),
     _capacity(_start + count)
     {
+        
         while (_end != _capacity)
-            _allocator.construct(_allocator, _end++, value);
+            _allocator.construct(_end++, value);
         
     }
 
@@ -80,7 +84,7 @@ public:
         _capacity = _start + diff;
         _end = _start;
         while (first != last)
-            _allocator.construct(_allocator, _end++, *first++);
+            _allocator.construct(_end++, *first++);
     };
 
 
@@ -155,28 +159,28 @@ public:
     reference at( size_type pos ) {
         if (pos >= size())
             throw std::out_of_range(ft::to_string(pos) + std::string(" >= this->size() \
-            (which is ") + std::string(this->size()) + std::string(")"));
+            (which is ") + ft::to_string(this->size()) + std::string(")"));
         return *(_start + pos);
     };
 
     const_reference at( size_type pos ) const {
         if (pos >= size())
             throw std::out_of_range(ft::to_string(pos) + std::string(" >= this->size() \
-            (which is ") + std::string(this->size()) + std::string(")"));
+            (which is ") + ft::to_string(this->size()) + std::string(")"));
         return *(_start + pos);
     };
 
     reference operator[]( size_type pos ) {
         if (pos >= size())
             throw std::out_of_range(ft::to_string(pos) + std::string(" >= this->size() \
-            (which is ") + std::string(this->size()) + std::string(")"));
+            (which is ") + ft::to_string(this->size()) + std::string(")"));
         return at(pos);
     }
 
     const_reference operator[]( size_type pos ) const {
         if (pos >= size())
             throw std::out_of_range(ft::to_string(pos) + std::string(" >= this->size() \
-            (which is ") + std::string(this->size()) + std::string(")"));
+            (which is ") + ft::to_string(this->size()) + std::string(")"));
         return at(pos);
     }
 
@@ -227,7 +231,7 @@ public:
             _allocator.construct(_end++, *p++);
         _allocator.deallocate(p_start, distance(p_start, p_end));
     };
-    size_type capacity() const {return distance(_start, _capacity); };
+    size_type capacity() const {return ft::distance(_start, _capacity); };
 
     //Modifiers
     void clear(){
@@ -239,7 +243,7 @@ public:
         pointer p;
         iterator out;
         if (capacity() > size()) {
-            p = ++_end;
+            p = _end++;
             while (p != pos)
                 *p = *p--;
             _allocator.construct(p, value);
@@ -273,7 +277,7 @@ public:
             while (count--)
                 _allocator.construct(p--, value);
         } else {
-            pointer p_cap = capacity();
+            size_type p_cap = capacity();
             pointer p_start = p = _start;
             pointer p_end = _end;
             size_type cap = Max(size() + count, 2 * size());
@@ -341,7 +345,17 @@ public:
         return first;
     };
 
-    void push_back( const T& value ) {insert(back(), value); };
+    void push_back( const T& value ) {
+        //insert(_end, value);
+        if (_end == _capacity)
+		{
+					int next_capacity = (this->size() > 0) ? (int)(this->size() * 2) : 1;
+					this->reserve(next_capacity);
+		}
+		_allocator.construct(_end, value);
+        _end++;
+    };
+
     void pop_back() {
         _end--;
         _allocator.destroy(_end);
@@ -357,8 +371,8 @@ public:
     };
 
     void swap( vector& other ) {
-        if (other == *this)
-            return;
+        // if (other == *this)
+        //     return;
         pointer p = other._start;
         other._start = _start;
         _start = p;
@@ -368,29 +382,28 @@ public:
         p = other._capacity;
         other._capacity = _capacity;
         _capacity = p;
-        p = other._allocator;
+        allocator_type a = other._allocator;
         other._allocator = _allocator;
-        _allocator = p;
+        _allocator = a;
     };
 
 };
 
-}
-
  //Non-member functions
     template< class T, class Alloc >
     bool operator==( const ft::vector<T,Alloc>& lhs, const ft::vector<T,Alloc>& rhs ) {
-        if (lhs.size() != rhs.size())
-            return false;
-        typename ft::vector<T>::const_iterator it1 = lhs.begin();
-        typename ft::vector<T>::const_iterator it2 = rhs.begin();
+        // if (lhs.size() != rhs.size())
+        //     return false;
+        // typename ft::vector<T>::const_iterator it1 = lhs.begin();
+        // typename ft::vector<T>::const_iterator it2 = rhs.begin();
 
-        while (it1 != lhs.end() && it2 != rhs.end())
-            if (*it1++ != *it2++)
-                return false;
-        if (it1 != lhs.end() || it2 != rhs.end())
-            return false;
-        return true;
+        // while (it1 != lhs.end() && it2 != rhs.end())
+        //     if (*it1++ != *it2++)
+        //         return false;
+        // if (it1 != lhs.end() || it2 != rhs.end())
+        //     return false;
+        // return true;
+        return std::equal(lhs.begin(), lhs.end(), rhs.begin());
     };
 
     template< class T, class Alloc >
@@ -418,9 +431,12 @@ public:
         return rhs <= lhs;
     };   
 
+    template< class T, class Alloc >
+    void swap( ft::vector<T,Alloc>& lhs, ft::vector<T,Alloc>& rhs ) {
+        lhs.swap(rhs);
+    };
 
-
-
+}
 
 
 
