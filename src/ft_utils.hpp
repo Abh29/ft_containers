@@ -7,6 +7,13 @@
 #include <sstream>
 #include <string>
 #include <iostream>
+#include <memory>
+#include <stdexcept>
+
+#define Max(a, b) (a > b ? a : b)
+
+class RBIterator;
+
 
 namespace ft {
 
@@ -142,7 +149,120 @@ bool equal( InputIt1 first1, InputIt1 last1,
             };
 
 
+template<class Arg1, class Arg2, class Result> 
+struct binary_function {
 
+	typedef Arg1	first_argument_type;
+	typedef Arg2	second_argument_type;
+	typedef Result	result_type;
+
+};
+
+
+template< class T >
+struct less {
+
+	typedef T		first_argument_type;
+	typedef T		second_argument_type;
+	typedef bool	result_type;
+
+
+	bool operator()( const T& lhs, const T& rhs ) const {
+		return lhs < rhs;
+	};
+
+};
+
+
+
+//Node
+template< class T >
+struct RBNode {
+
+public:
+	T data;
+	bool is_black;
+	RBNode *parent;
+	RBNode *left;
+	RBNode *right;
+
+	RBNode():
+	data(),
+	parent(ft_nullptr),
+	left(ft_nullptr),
+	right(ft_nullptr),
+	is_black(false)
+	{};
+
+	RBNode(	const T& value, RBNode* parent = ft_nullptr, 
+			RBNode* left = ft_nullptr, RBNode* right = ft_nullptr,
+			bool is_black = false):
+	data(value),
+	parent(parent),
+	left(left),
+	right(right),
+	is_black(is_black) 
+	{};
+
+	RBNode(const RBNode& other):
+	data(other.data),
+	parent(other.parent),
+	left(other.left),
+	right(other.right),
+	is_black(other.is_black)
+	{};
+
+	virtual ~RBNode() {};
+
+	RBNode& operator=(const RBNode& other) {
+		if (*this == other)
+			return *this;
+		data = other.data;
+		parent = other.parent;
+		left = other.left;
+		right = other.right;
+		is_black = other.is_black;
+		return *this;
+	}
+
+};
+
+
+
+template<class T1, class T2>
+bool operator==( const ft::RBNode<T1>& lhs,
+                 const ft::RBNode<T2>& rhs ) {
+                    return lhs.data == rhs.data;
+                 };
+
+template<class T1, class T2>
+bool operator!=( const ft::RBNode<T1>& lhs,
+                 const ft::RBNode<T2>& rhs ) {
+                    return lhs.data != rhs.data;
+                 };
+
+template<class T1, class T2>
+bool operator<( const ft::RBNode<T1>& lhs,
+                 const ft::RBNode<T2>& rhs ) {
+                    return lhs.data < rhs.data;
+                 };
+
+template<class T1, class T2>
+bool operator<=( const ft::RBNode<T1>& lhs,
+                 const ft::RBNode<T2>& rhs ) {
+                    return lhs.data <= rhs.data;
+                 };
+
+template<class T1, class T2>
+bool operator>( const ft::RBNode<T1>& lhs,
+                 const ft::RBNode<T2>& rhs ) {
+                    return lhs.data > rhs.data;
+                 };
+template<class T1, class T2>
+bool operator>=( const ft::RBNode<T1>& lhs,
+                 const ft::RBNode<T2>& rhs ) {
+                    return lhs.data >= rhs.data;
+                 };
 
 
 
@@ -160,4 +280,4 @@ bool equal( InputIt1 first1, InputIt1 last1,
 
 
 
-#endif //__FT_UTILS__
+#endif //__FT_UTILS__is_black

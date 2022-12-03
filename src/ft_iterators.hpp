@@ -215,7 +215,7 @@ public:
 
     iterator() : _elm(ft::ft_nullptr) {};
     iterator(pointer elm): _elm(elm) {};
-    iterator(iterator& other) : _elm(other._elm) {};
+    iterator(const iterator& other) : _elm(other._elm) {};
     iterator& operator= (const iterator& other) {
         if (other == *this)
             return *this;
@@ -223,7 +223,7 @@ public:
         return *this;
     }
 
-    virtual ~iterator();
+    virtual ~iterator() {};
 
     pointer base() const {return _elm; };
     void swap(iterator& a, iterator& b) {
@@ -240,13 +240,154 @@ public:
         return *this;
     }
 
-    iterator& operator++ (int) {
-        pointer tmp = _elm;
+    iterator operator++ (int) {
+        iterator tmp = *this;
         ++_elm;
-        return iterator(tmp);
+        return tmp;
     }
 
 };
+
+
+//random access iterator
+
+template<class T>
+struct random_access_iterator: public ft::iterator<ft::random_access_iterator_tag, T> {
+
+public:
+    typedef typename ft::iterator<ft::random_access_iterator_tag, T>::iterator_category     iterator_category;
+    typedef typename ft::iterator<ft::random_access_iterator_tag, T>::value_type            value_type;
+    typedef typename ft::iterator<ft::random_access_iterator_tag, T>::difference_type       difference_type;
+    typedef typename ft::iterator<ft::random_access_iterator_tag, T>::pointer               pointer;
+    typedef typename ft::iterator<ft::random_access_iterator_tag, T>::reference             reference;
+
+
+    random_access_iterator(): iterator<iterator_category, value_type>() {};
+    random_access_iterator(pointer elm): iterator<iterator_category, value_type>(elm) {};
+    random_access_iterator(const random_access_iterator& other): iterator<iterator_category, value_type>(other) {};
+
+    random_access_iterator& operator=(const random_access_iterator &other){
+        iterator<iterator_category, value_type>::operator=(other);
+        return *this;
+    };
+
+
+    virtual ~random_access_iterator() {};
+
+    pointer base() const { return iterator<iterator_category, value_type>::base(); };
+
+    void swap(random_access_iterator& a, random_access_iterator& b) {
+        iterator<iterator_category, value_type>::swap(a, b);
+    };
+
+    reference   operator*(void) const {
+        return this->iterator<iterator_category, value_type>::operator*();
+    };
+
+    pointer     operator->(void) {
+        return this->iterator<iterator_category, value_type>::operator->();
+    };
+
+    random_access_iterator& operator++() {
+        this->iterator<iterator_category, value_type>::operator++();
+        return *this;
+    }
+
+    random_access_iterator operator++(int) {
+        random_access_iterator tmp = *this;
+        operator++();
+        return tmp;
+    }
+
+
+    random_access_iterator& operator--() {
+        --(this->_elm);
+        return *this;
+    }
+
+    random_access_iterator operator--(int) {
+        random_access_iterator tmp = *this;
+        --(this->_elm);
+        return tmp;
+    }
+
+    random_access_iterator& operator+=(difference_type n) {
+        this->_elm += n;
+        return *this;
+    }
+
+    random_access_iterator operator+(difference_type n) const {
+        return random_access_iterator(this->_elm + n);
+    }
+
+    random_access_iterator operator-(difference_type n) const {
+        return random_access_iterator(this->_elm - n);
+    }
+
+    random_access_iterator& operator-=(difference_type n) {
+        this->_elm -= n;
+        return *this;
+    }
+
+
+    reference operator[](difference_type n) {
+        return *(*this + n);
+    }
+
+};
+
+
+template<class T>
+ft::random_access_iterator<T> operator+(
+    typename ft::random_access_iterator<T>::difference_type n, 
+    const ft::random_access_iterator<T>& it
+    ) { return it + n; };
+
+
+template<class T>
+typename ft::random_access_iterator<T>::difference_type 
+operator-(  const ft::random_access_iterator<T> lhs,
+            const ft::random_access_iterator<T> rhs) {
+                return (lhs.base() - rhs.base());
+            };
+
+
+template<class Iterator1, class Iterator2 >
+bool operator==( const ft::random_access_iterator<Iterator1>& lhs,
+                 const ft::random_access_iterator<Iterator2>& rhs ) {
+                    return lhs.base() == rhs.base();
+                 };
+
+template<class Iterator1, class Iterator2>
+bool operator!=( const ft::random_access_iterator<Iterator1> lhs,
+                 const ft::random_access_iterator<Iterator2> rhs) {
+                        return !(lhs == rhs);
+                    };
+
+template<class Iterator1, class Iterator2>
+bool operator<( const ft::random_access_iterator<Iterator1> lhs,
+                const ft::random_access_iterator<Iterator2> rhs) {
+                    return (lhs.base() < rhs.base());
+                };
+
+template<class Iterator1, class Iterator2>
+bool operator<=( const ft::random_access_iterator<Iterator1> lhs,
+                const ft::random_access_iterator<Iterator2> rhs) {
+                    return (lhs.base() <= rhs.base());
+                };
+
+template<class Iterator1, class Iterator2>
+bool operator>( const ft::random_access_iterator<Iterator1> lhs,
+                const ft::random_access_iterator<Iterator2> rhs) {
+                    return (lhs.base() > rhs.base());
+                };
+
+template<class Iterator1, class Iterator2>
+bool operator>=( const ft::random_access_iterator<Iterator1> lhs,
+                const ft::random_access_iterator<Iterator2> rhs) {
+                    return (lhs.base() >= rhs.base());
+                };
+
 
 
 //reverse iterator
@@ -391,6 +532,115 @@ typename reverse_iterator<Iterator1>::difference_type
 
 
 
+// RedBlackTree Iterator
+template<class Node, class Compare = ft::less<Node>() >
+class RBIterator: public ft::iterator<ft::bidirectional_iterator_tag, Node> {
+
+public:
+
+    typedef typename ft::iterator<ft::bidirectional_iterator_tag, Node>::iterator_category  iterator_category;
+    typedef typename ft::iterator<ft::bidirectional_iterator_tag, Node>::value_type         value_type;
+    typedef typename ft::iterator<ft::bidirectional_iterator_tag, Node>::difference_type    difference_type;
+    typedef typename ft::iterator<ft::bidirectional_iterator_tag, Node>::pointer            pointer;
+    typedef typename ft::iterator<ft::bidirectional_iterator_tag, Node>::reference          reference;
+    typedef Compare                                                                         comparator;
+
+protected:
+    comparator      _comp;
+
+public:
+
+    RBIterator(const pointer _elm):
+    ft::iterator<ft::bidirectional_iterator_tag, Node>(_elm)
+    {}
+
+    RBIterator(const comparator& comp = comparator()):
+    ft::iterator<ft::bidirectional_iterator_tag, Node>(),
+    _comp(comp)
+    {};
+
+
+    RBIterator(const RBIterator& other):
+    ft::iterator<ft::bidirectional_iterator_tag, Node>(other),
+    _comp(other._comp)
+    {};
+
+    virtual ~RBIterator() {};
+
+    RBIterator& operator=(const RBIterator& other) {
+        this->_elm = other._elm;
+        this->_comp = other._comp;
+        return *this;
+    };
+
+
+    reference operator*() const {
+        return *this->_elm; 
+    };
+
+    pointer operator->() const {
+        return &(operator*());
+    }
+
+    RBIterator& operator++() {
+        pointer tmp = this->_elm;
+        this->_elm = ft_nullptr;
+
+        if (tmp->right) {
+            tmp = tmp->right;
+            while (tmp->left)
+                tmp = tmp->left;
+            this->_elm = tmp;
+        } else {
+
+            while (tmp->parent){
+                if (_comp(*tmp, *tmp->parent)){
+                    this->_elm = tmp->parent;
+                    break;
+                }
+                tmp = tmp->parent;
+            }
+        }
+        return *this;
+    };
+
+
+    RBIterator& operator++(int) {
+        RBIterator out(*this);
+        operator++();
+        return out;
+    }
+
+
+    RBIterator& operator--() {
+        pointer tmp = this->_elm;
+        this->_elm = ft_nullptr;
+
+        if (tmp->left) {
+            tmp = tmp->left;
+            while (tmp->right)
+                tmp = tmp->right;
+            this->_elm = tmp;
+        } else {
+            while (tmp->parent){
+                if (_comp(*tmp->parent, *tmp)){
+                    this->_elm = tmp->parent;
+                    break;
+                }
+                tmp = tmp->parent;
+            }
+        }
+        return *this;
+    };
+
+
+    RBIterator& operator--(int) {
+        RBIterator out(*this);
+        operator--();
+        return out;
+    }
+
+};
 
 
 

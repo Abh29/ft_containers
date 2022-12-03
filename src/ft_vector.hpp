@@ -2,18 +2,8 @@
 #define __FT_VECTOR__
 
 
-
-
-#include <algorithm>
-#include <cstddef>
-#include <memory>
-#include <stdexcept>
-#include <string>
 #include "ft_utils.hpp"
 #include "ft_iterators.hpp"
-#include <string>
-
-#define Max(a, b) (a > b ? a : b)
 
 
 namespace ft {
@@ -24,18 +14,18 @@ template<typename T, typename Allocator = std::allocator<T> > class vector {
 
 public:
     //Member types  
-    typedef T                                       value_type;
-    typedef Allocator                               allocator_type;
-    typedef std::size_t                             size_type;
-    typedef std::ptrdiff_t                          difference_type;
-    typedef value_type&                             reference;
-    typedef const value_type&                       const_reference ;
-    typedef typename Allocator::pointer             pointer;
-    typedef typename Allocator::const_pointer       const_pointer;
-    typedef pointer                                 iterator;       //TODO: change this to LegacyRandomAccessIterator
-    typedef const_pointer                           const_iterator;
-    typedef ft::reverse_iterator<iterator>          reverse_iterator;
-    typedef ft::reverse_iterator<const_iterator>    const_reverse_iterator;
+    typedef T                                               value_type;
+    typedef Allocator                                       allocator_type;
+    typedef std::size_t                                     size_type;
+    typedef std::ptrdiff_t                                  difference_type;
+    typedef value_type&                                     reference;
+    typedef const value_type&                               const_reference ;
+    typedef typename Allocator::pointer                     pointer;
+    typedef typename Allocator::const_pointer               const_pointer;
+    typedef ft::random_access_iterator<value_type>          iterator;
+    typedef ft::random_access_iterator<const value_type>    const_iterator;
+    typedef ft::reverse_iterator<iterator>                  reverse_iterator;
+    typedef ft::reverse_iterator<const_iterator>            const_reverse_iterator;
 
 private:
         allocator_type  _allocator;
@@ -109,6 +99,7 @@ public:
             return *this;
         clear();
         insert(begin(), other.begin(), other.end());
+        return *this;
     };
 
     //assign
@@ -235,18 +226,18 @@ public:
 
     //Modifiers
     void clear(){
-        while(_end-- != _start)
-            _allocator.destroy(_end);
+        while(_end != _start)
+            _allocator.destroy(--_end);
     };
 
-    iterator insert( const_iterator pos, const T& value ) {
-        pointer p;
-        iterator out;
+    iterator insert( iterator pos, const T& value ) {
+        pointer p, out;
         if (capacity() > size()) {
             p = _end++;
-            while (p != pos)
-                *p = *p--;
+            while (p != pos.base())
+                *p = *--p;
             _allocator.construct(p, value);
+            out = p;
         } else {
             pointer p_start = p = _start;
             pointer p_end = _end;
@@ -255,16 +246,18 @@ public:
             _start = _allocator.allocate(cap);
             _end = _start;
             _capacity = _start + cap;
-            while (p != pos)
+            while (p != pos.base())
                 *_end++ = *p++;
+            out = _end;
+            _allocator.construct(_end++, value);
             while (p != p_end)
                 *_end++ = *p++;
             _allocator.deallocate(p_start, p_cap);
         }
-        return iterator(pos);
+        return iterator(out);
     };
 
-    void insert( const_iterator pos, size_type count, const T& value ) {
+    void insert( iterator pos, size_type count, const T& value ) {
         pointer p;
         if (count == 0)
             return;
@@ -272,19 +265,19 @@ public:
             throw std::length_error("new_size > max_size allowed");
         if (size() + count <= capacity()) {
             p = _end += count;
-            while (p - count != pos)
+            while (p - count != pos.base())
                 *p = *(p-- - count);
             while (count--)
-                _allocator.construct(p--, value);
+                _allocator.construct(--p, value);
         } else {
             size_type p_cap = capacity();
+            size_type cap = Max(this->size() + count, 2 * this->size());
             pointer p_start = p = _start;
             pointer p_end = _end;
-            size_type cap = Max(size() + count, 2 * size());
             _start = _allocator.allocate(cap);
             _end = _start;
             _capacity = _start + cap;
-            while (p != pos)
+            while (p != pos.base())
                 *_end++ = *p++;
             while (count--)
                 _allocator.construct(_end++, value);
@@ -294,22 +287,25 @@ public:
         }
     };
 
+    // insert for non integral types
     template< class InputIt >
-    void insert( const_iterator pos, InputIt first, InputIt last ) {
+    void insert(iterator poss, InputIt first, InputIt last,
+    typename ft::enable_if<!is_integral<InputIt>::value, InputIt>::type = InputIt()) {
         if (first == last)
             return;
-        size_type count = distance(first, last);
+        difference_type count = distance(first, last);
         pointer p;
+        pointer pos = poss.base();
         if (size() + count > max_size())
             throw std::length_error("new_size > max_size allowed");
         if (size() + count <= capacity()) {
             p = _end += count;
             while (p - count != pos)
-                *p = *(p-- - count);
+                *p = *(p-- - count - 1);
             while (last != first)
                 _allocator.construct(p--, *last--);
         } else {
-            pointer p_cap = capacity();
+            size_type p_cap = capacity();
             pointer p_start = p = _start;
             pointer p_end = _end;
             size_type cap = Max(size() + count, 2 * size());
@@ -364,10 +360,12 @@ public:
     void resize( size_type count, T value = T() ) {
         if (count > max_size())
             throw std::length_error("new_size > max_size allowed");
-        while (count > size())
-            pop_back();
+        if (count > capacity())
+            reserve(Max(count, 2 * size()));
         while (count < size())
-            insert(_end, count - size(), value);
+            pop_back();
+        if (count > size())
+            insert(this->end(), count - size(), value);
     };
 
     void swap( vector& other ) {
@@ -387,6 +385,9 @@ public:
         _allocator = a;
     };
 
+private:
+    const_iterator const_begin() {return _start;};
+
 };
 
  //Non-member functions
@@ -403,7 +404,7 @@ public:
         // if (it1 != lhs.end() || it2 != rhs.end())
         //     return false;
         // return true;
-        return std::equal(lhs.begin(), lhs.end(), rhs.begin());
+        return ft::equal(lhs.begin(), lhs.end(), rhs.begin());
     };
 
     template< class T, class Alloc >
