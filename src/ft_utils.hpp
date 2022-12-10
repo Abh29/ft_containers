@@ -178,8 +178,12 @@ struct less {
 //Node
 template< class T >
 struct RBNode {
-
 public:
+
+	typedef T			value_type;
+	typedef T&			refrence;
+	typedef T*			pointer;
+
 	T data;
 	bool is_black;
 	RBNode *parent;
@@ -224,6 +228,12 @@ public:
 		is_black = other.is_black;
 		return *this;
 	}
+
+	bool operator==(const RBNode& other) {
+		return (data == other.data);
+	}
+
+	operator T() const {return data;}
 
 };
 

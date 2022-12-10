@@ -280,20 +280,118 @@ int main2(int argc, char** argv) {
 
 // 	return 0;
 // }
+#include <stdio.h>
+template<class T>
+std::string print_node(ft::RBNode<T>*& p) {
+	if (p == ft::ft_nullptr)
+		return "nil";
+	char buff[100];
+	sprintf(buff, "%ld", (T) *p);
+	return buff;
+}
+
+template<class T>
+std::string print_color(ft::RBNode<T>*& p) {
+	if (p == ft::ft_nullptr)
+		return "B";
+	if (p->is_black)
+		return "B";
+	return "R";
+}
+
+template<class T>
+void printGivenLevel(ft::RBNode<T>*& root, int level)
+{
+	if (root == NULL){
+		std::cout << ".";
+		return;
+	}
+	if (level == 1)
+		std::cout << print_node(root) << print_color(root);
+	else if (level > 1) {
+		printGivenLevel(root->left, level - 1);
+		printGivenLevel(root->right, level - 1);
+	}
+}
+
+template<class T>
+void print_tree(ft::RBNode<T>* root, int height)
+{
+	for (int i = 1; i <= height; i++) {
+		printGivenLevel(root, i);
+		std::cout << std::endl;
+	}
+}
+
+template<class T>
+void check_tree(ft::Red_Black_Tree<T>& t) {
+	ft::Red_Black_Tree<int>::iterator b, e;
+	b = t.begin();
+	e = t.end();
+
+	while (b != e){
+		if ( b.base() != t.get_root() && b.base()->parent->right != b.base() && b.base()->parent->left != b.base())
+			std::cout << "error " << *b << std::endl;
+		++b;
+	}
+}
+
+template<class T>
+void insert_debug(ft::Red_Black_Tree<T>& tree, T value) {
+	std::cout << "inserting " << value << std::endl;
+	tree.insert(value);
+	print_tree(tree.get_root(), tree.height());
+	check_tree(tree);
+	std::cout << "********************" << std::endl;	
+}
+
+
 
 
 int main() {
 
 	ft::Red_Black_Tree<int> t1;
+	// ft::RBNode<int>* p;
 	
 	ft::Red_Black_Tree<int>::iterator b, e;
 
 
-	b = t1.begin();
-	e = t1.end();
+	// std::cout << t1.size() << std::endl;
 
-	std::cout << (b == e) << std::endl;
+	// insert_debug(t1, 5);
+	// insert_debug(t1, 3);
+	// insert_debug(t1, 7);
+	// insert_debug(t1, 1);
+	// insert_debug(t1, 9);
+	// insert_debug(t1, 6);
+	// insert_debug(t1, 8);
+	// insert_debug(t1, 2);
 
+	for(int i = 2 ; i < 25; i++)
+		insert_debug(t1, 25 - i);
+	
+	insert_debug(t1, 1);
+
+	// check_tree(t1);
+
+	// insert_debug(t1, 1);
+	// insert_debug(t1, 2);
+	// insert_debug(t1, 3);
+
+	// print_tree(t1.get_root(), t1.height());
+	// std::cout << "********************" << std::endl;
+
+	// std::cout << t1.size() << std::endl;
+
+	// b = t1.begin();
+	// e = t1.end();
+
+	// while (b != e)
+	// 	std::cout << *b++ << std::endl;
+
+
+	// ft::RBNode<int>* p = t1.get_root();
+	// print_tree(t1.get_root(), t1.height());
 
 }
 

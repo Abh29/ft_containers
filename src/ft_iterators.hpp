@@ -148,8 +148,6 @@ public:
     pair( const pair<U1, U2>& p ): first(p.first), second(p.second) {};
 
     pair& operator=( const pair& other ){
-        if (other == *this)
-            return *this;
         first = other.first;
         second = other.second;
         return *this;
@@ -351,7 +349,7 @@ operator-(  const ft::random_access_iterator<T> lhs,
                 return (lhs.base() - rhs.base());
             };
 
-
+//TODO: change these to refrences
 template<class Iterator1, class Iterator2 >
 bool operator==( const ft::random_access_iterator<Iterator1>& lhs,
                  const ft::random_access_iterator<Iterator2>& rhs ) {
@@ -538,20 +536,23 @@ class RBIterator: public ft::iterator<ft::bidirectional_iterator_tag, Node> {
 
 public:
 
-    typedef typename ft::iterator<ft::bidirectional_iterator_tag, Node>::iterator_category  iterator_category;
-    typedef typename ft::iterator<ft::bidirectional_iterator_tag, Node>::value_type         value_type;
-    typedef typename ft::iterator<ft::bidirectional_iterator_tag, Node>::difference_type    difference_type;
-    typedef typename ft::iterator<ft::bidirectional_iterator_tag, Node>::pointer            pointer;
-    typedef typename ft::iterator<ft::bidirectional_iterator_tag, Node>::reference          reference;
-    typedef Compare                                                                         comparator;
+    typedef typename ft::iterator<ft::bidirectional_iterator_tag, Node>::iterator_category                          iterator_category;
+    typedef typename ft::iterator<ft::bidirectional_iterator_tag, Node>::value_type                                 value_type;
+    typedef typename ft::iterator<ft::bidirectional_iterator_tag, Node>::difference_type                            difference_type;
+    typedef typename ft::iterator<ft::bidirectional_iterator_tag, Node>::pointer                                    pointer;
+    typedef typename ft::iterator<ft::bidirectional_iterator_tag, Node>::reference                                  reference;
+    typedef typename ft::iterator<ft::bidirectional_iterator_tag, typename Node::value_type>::pointer               value_pointer;
+    typedef typename ft::iterator<ft::bidirectional_iterator_tag, typename Node::value_type>::reference             value_reference;
+    typedef Compare                                                                                                 comparator;
 
 protected:
     comparator      _comp;
 
 public:
 
-    RBIterator(const pointer _elm):
-    ft::iterator<ft::bidirectional_iterator_tag, Node>(_elm)
+    RBIterator(const pointer _elm, const comparator& comp = comparator()):
+    ft::iterator<ft::bidirectional_iterator_tag, Node>(_elm),
+    _comp(comp)
     {}
 
     RBIterator(const comparator& comp = comparator()):
@@ -574,12 +575,16 @@ public:
     };
 
 
-    reference operator*() const {
-        return *this->_elm; 
+    value_reference operator*() const {
+        return this->_elm->data;
     };
 
-    pointer operator->() const {
+    value_pointer operator->() const {
         return &(operator*());
+    }
+
+    pointer base() const {
+        return ft::iterator<ft::bidirectional_iterator_tag, Node>::base();
     }
 
     RBIterator& operator++() {
@@ -592,9 +597,10 @@ public:
                 tmp = tmp->left;
             this->_elm = tmp;
         } else {
-
+            // using the cast operator T()
             while (tmp->parent){
-                if (_comp(*tmp, *tmp->parent)){
+                // if (_comp(*tmp, *tmp->parent)){
+                if (tmp->parent->left == tmp){
                     this->_elm = tmp->parent;
                     break;
                 }
@@ -605,7 +611,7 @@ public:
     };
 
 
-    RBIterator& operator++(int) {
+    RBIterator operator++(int) {
         RBIterator out(*this);
         operator++();
         return out;
@@ -634,14 +640,34 @@ public:
     };
 
 
-    RBIterator& operator--(int) {
+    RBIterator operator--(int) {
         RBIterator out(*this);
         operator--();
         return out;
     }
 
+    bool operator==(const RBIterator& other) {
+        return base() == other.base();
+    }
+
+    bool operator!=(const RBIterator& other) {
+        return base() != other.base();
+    }
+
 };
 
+
+template<class Node1, class Node2>
+bool operator==( const ft::RBIterator<Node1>& lhs,
+                const ft::RBIterator<Node2>& rhs) {
+                    return (lhs.base() == rhs.base());
+                };
+
+template<class Node1, class Node2>
+bool operator!=( const ft::RBIterator<Node1>& lhs,
+                const ft::RBIterator<Node2>& rhs) {
+                    return (lhs.base() != rhs.base());
+                };
 
 
 
