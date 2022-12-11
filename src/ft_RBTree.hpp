@@ -186,17 +186,13 @@ private:
         }
     };
 
-
     void fix_insert(node_pointer node) {
         node_pointer tmp = node;
         node_pointer u, g;
 
         while (tmp != _root && !tmp->parent->is_black) {
-            //  std::cout << "fix" << std::endl;
             u = uncle(tmp);
             if (!u || u->is_black) {
-                // std::cout << "fix" << *tmp << std::endl;
-
                 if (is_left_child(tmp) && is_right_child(tmp->parent)){
                     rotate_right(tmp->parent);
                     tmp =  tmp->right;
@@ -204,6 +200,7 @@ private:
                     rotate_left(tmp->parent);
                     tmp = tmp->left;
                 }
+
                 tmp->parent->is_black = true;
                 tmp->parent->parent->is_black = false;
 
@@ -234,6 +231,9 @@ private:
 
         node->parent = l;
         node->left = l->right;
+
+        if (l->right)
+            l->right->parent = node;
         if (node == _root)
             _root = l;
         else if (p->right == node)
@@ -242,17 +242,21 @@ private:
             p->left = l;
         l->right = node;
         l->parent = p;
+        
     }
 
     void rotate_left(node_pointer& node) {
         if (node == ft_nullptr || node->right == ft_nullptr)
             return;
+
         node_pointer r = node->right;
         node_pointer p = node->parent;
 
         node->parent = r;
         node->right = r->left;
         
+        if (r->left)
+            r->left->parent = node;
         if (p == ft_nullptr)
             _root = r;
         else if (p->right == node)
@@ -261,6 +265,7 @@ private:
             p->left = r;
         r->left = node;
         r->parent = p;
+        
     }
 
     node_pointer uncle(node_pointer& node) {

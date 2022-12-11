@@ -339,7 +339,7 @@ void check_tree(ft::Red_Black_Tree<T>& t) {
 template<class T>
 void insert_debug(ft::Red_Black_Tree<T>& tree, T value) {
 	std::cout << "inserting " << value << std::endl;
-	tree.insert(value);
+	std::cout << (tree.insert(value).second ? "inserted" : "not inserted") << std::endl;
 	print_tree(tree.get_root(), tree.height());
 	check_tree(tree);
 	std::cout << "********************" << std::endl;	
@@ -367,11 +367,13 @@ int main() {
 	// insert_debug(t1, 8);
 	// insert_debug(t1, 2);
 
-	for(int i = 2 ; i < 25; i++)
-		insert_debug(t1, 25 - i);
+	int i = 1;
+	while(i < 25){
+		insert_debug(t1,  i);
+		insert_debug(t1, 25 - i++);
+	}
+		
 	
-	insert_debug(t1, 1);
-
 	// check_tree(t1);
 
 	// insert_debug(t1, 1);
@@ -383,11 +385,11 @@ int main() {
 
 	// std::cout << t1.size() << std::endl;
 
-	// b = t1.begin();
-	// e = t1.end();
+	b = t1.begin();
+	e = t1.end();
 
-	// while (b != e)
-	// 	std::cout << *b++ << std::endl;
+	while (b != e)
+		std::cout << *b++ << std::endl;
 
 
 	// ft::RBNode<int>* p = t1.get_root();
