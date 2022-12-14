@@ -8,10 +8,10 @@
 namespace ft {
 
 
-template<	class T, class Node = ft::RBNode<T>, 
+template<	class T, class Compare = ft::less<T>,
+            class Node = ft::RBNode<T>, 
 			class NAllocator = std::allocator<Node>,
-			class Allocator = std::allocator<T>,
-			class Compare = ft::less<T> >
+			class Allocator = std::allocator<T> >
 class Red_Black_Tree {
 
 
@@ -65,11 +65,13 @@ public:
 
     //TODO: implement this
     virtual ~Red_Black_Tree() {
-
+        this->clear();
     };
 
     //TODO: delete this
     node_pointer get_root() const {return _root; };
+
+    size_type height() const {return height(_root); };
 
     Red_Black_Tree& operator=(const Red_Black_Tree& other){
         _val_alloc = other._val_alloc;
@@ -84,6 +86,10 @@ public:
     size_type size() const {
         return _size;
     };
+
+    size_type max_size() const {
+        return _node_alloc.max_size();
+    }
 
     node_pointer max() const {
         if (is_empty())
@@ -114,7 +120,8 @@ public:
     
     ft::pair<iterator, bool> insert(const value_type& value) {
         node_pointer node = _node_alloc.allocate(1);
-        *node = node_type(value);
+        _node_alloc.construct(node, value);
+        // *node = node_type(value);
         return insert(node);
     }
 
@@ -165,7 +172,68 @@ public:
         return out;
     };
 
-    int height() const {return height(_root); };
+    size_type remove(const value_type& key) {
+
+        if (_root == ft_nullptr)
+            return 0;
+
+        node_pointer tmp = _root;
+
+        while (tmp) {
+            if (_comp(key, tmp->data))
+                tmp = tmp->left;
+            else if (_comp(tmp->data, key))
+                tmp = tmp->right;
+            else
+                return remove(tmp);
+        }
+        return 0;
+    }
+
+    iterator find(const value_type& key) {
+
+        if (_root == ft_nullptr)
+            return end();
+
+        node_pointer tmp = _root;
+
+        while (tmp) {
+            if (_comp(key, tmp->data))
+                tmp = tmp->left;
+            else if (_comp(tmp->data, key))
+                tmp = tmp->right;
+            else
+                return tmp;
+        }
+        return end();
+    }
+
+    //TODO: implement this
+    void clear() {
+
+    };
+
+    void swap(const Red_Black_Tree &other) {
+        node_pointer    tmp_r = _root;
+        size_type       tmp_s = _size;
+        node_allocator  tmp_n = _node_alloc;
+        value_allocator tmp_v = _val_alloc;
+        Compare         tmp_c = _comp;
+
+
+        _root = other._root;
+        _size = other._size;
+        _node_alloc = other._node_alloc;
+        _val_alloc = other._val_alloc;
+        _comp = other._comp;
+
+
+        other._root = tmp_r;
+        other._size = tmp_s;
+        other._node_alloc = tmp_n;
+        other._val_alloc = tmp_v;
+        other._comp = tmp_c;
+    };
 
 
 private:
@@ -290,6 +358,199 @@ private:
         return (node->parent->right == node);
     }
 
+    size_type remove2(node_pointer node) {
+
+        node_pointer tmp = ft_nullptr;
+
+        if (node == ft_nullptr)
+            return 0;
+        if (node->right == ft_nullptr) {
+            tmp = node->left;
+            if (node == _root) {
+                _root = node->left;
+                if (tmp) {
+                    _root->parent = ft_nullptr;
+                    _root->is_black = true;   
+                }
+                delete_node(node);
+                --_size;
+                return 1;
+            } else {
+                if (is_right_child(node))
+                    node->parent->right = node->left;
+                else
+                    node->parent->left = node->left;
+                if (tmp)
+                    node->left->parent = node->parent;
+                if (tmp && !tmp->is_black)
+                    tmp->is_black = true;
+                else if (node->is_black)
+                    fix_delete(node); 
+                delete_node(node);
+                --_size;
+                return 1;
+            }
+        }else if (node->left == ft_nullptr) {
+            tmp = node->right;
+            if (node == _root) {
+                _root = node->right;
+                if (tmp) {
+                    _root->parent = ft_nullptr;
+                    _root->is_black = true;   
+                }
+                delete_node(node);
+                --_size;
+                return 1;
+            } else {
+                if (is_right_child(node))
+                    node->parent->right = node->right;
+                else
+                    node->parent->left = node->right;
+                if (tmp)
+                    node->right->parent = node->parent;
+                if (node->is_black)
+                    fix_delete(node);
+                delete_node(node);
+                --_size;
+                return 1;
+            }
+        }else {
+            tmp = node->left;
+            while (tmp->right)
+                tmp = tmp->right;
+            _val_alloc.destroy(&node->data);
+            node->data = tmp->data;
+            if (is_right_child(tmp))
+                tmp->parent->right = tmp->right;
+            else 
+                tmp->parent->left = tmp->right;
+            if (tmp->left)
+                tmp->left->parent = tmp->parent;
+            if (tmp->is_black)
+                fix_delete(tmp);
+            delete_node(tmp);
+        }
+        return 0;
+    }
+
+    void RB_transplant(node_pointer u, node_pointer v) {
+        if (u == ft_nullptr)
+            return;
+        if (u == _root)
+            _root = v;
+        else if (is_right_child(u))
+            u->parent->right = v;
+        else
+            u->parent->left = v;
+        if (v)
+            v->parent = u->parent;
+    }
+
+    int remove(node_pointer node) {
+        node_pointer y = node;
+        node_pointer x;
+        bool o_black = node->is_black;
+
+        if (node == ft_nullptr)
+            return 0;
+
+        if (node->left == ft_nullptr) {
+            x = node->right;
+            RB_transplant(node, node->right);
+        } else if (node->right == ft_nullptr) {
+            x = node->left;
+            RB_transplant(node, node->left);
+        } else {
+            y = node->right;
+            while (y->left)
+                y = y->left;
+            o_black = y->is_black;
+            x = y->right;
+            if (y->parent == node && x)
+                x->parent = y;
+            else {
+                RB_transplant(y, y->right);
+                y->right = node->right;
+                y->right->parent = y;
+            }
+            RB_transplant(node, y);
+            y->left = node->left;
+            y->left->parent = y;
+            y->is_black = node->is_black;
+            if (o_black)
+                RB_delete_fixup(x);
+            delete_node(node);
+            --_size;
+        }
+        return 1;
+    }
+
+
+    void RB_delete_fixup(node_pointer node) {
+
+        node_pointer x = node;
+        node_pointer w;
+        while (x != _root && x->is_black) {
+            if (is_left_child(x)) {
+                w = x->parent->right;
+                if (w && !w->is_black) {
+                    w->is_black = true;
+                    x->parent->is_black = false;
+                    rotate_left(x->parent);
+                    w = x->parent->right;
+                }
+                if ((!w->left || w->left->is_black) && (!w->right || w->right->is_black)) {
+                    w->is_black = false;
+                    x = x->parent;
+                } else {
+                    if (!w->right || w->right->is_black) {
+                        w->left->is_black = true;
+                        w->is_black = false;
+                        rotate_right(w);
+                        w = x->parent->right;
+                    }
+                    w->is_black = x->parent->is_black;
+                    x->parent->is_black = true;
+                    w->right->is_black = true;
+                    rotate_left(x->parent);
+                    x = _root;
+                }
+            } else {
+                w = x->parent->left;
+                if (w && !w->is_black) {
+                    w->is_black = true;
+                    x->parent->is_black = false;
+                    rotate_right(x->parent);
+                    w = x->parent->left;
+                }
+                if ((!w->left || w->left->is_black) && (!w->right || w->right->is_black)) {
+                    w->is_black = false;
+                    x = x->parent;
+                } else {
+                    if (!w->left || w->left->is_black) {
+                        w->right->is_black = true;
+                        w->is_black = false;
+                        rotate_right(w);
+                        w = x->parent->left;
+                    }
+                    w->is_black = x->parent->is_black;
+                    x->parent->is_black = true;
+                    w->right->is_black = true;
+                    rotate_right(x->parent);
+                    x = _root;
+                }
+            }
+        }
+        x->is_black = true;
+    };
+
+
+    void delete_node(node_pointer node) {
+        // _node_alloc.destroy(node);
+        // _node_alloc.deallocate(node);
+        _val_alloc.destroy(&node->data);
+        delete node;
+    }
 
 };
 

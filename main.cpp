@@ -345,7 +345,14 @@ void insert_debug(ft::Red_Black_Tree<T>& tree, T value) {
 	std::cout << "********************" << std::endl;	
 }
 
-
+template<class T>
+void delete_debug(ft::Red_Black_Tree<T>& tree, T value) {
+	std::cout << "deleting " << value << std::endl;
+	std::cout << (tree.remove(value)? "removed" : "not removed") << std::endl;
+	print_tree(tree.get_root(), tree.height());
+	check_tree(tree);
+	std::cout << "********************" << std::endl;	
+}
 
 
 int main() {
@@ -358,8 +365,37 @@ int main() {
 
 	// std::cout << t1.size() << std::endl;
 
+	t1.insert(12);
+	t1.insert(5);
+	t1.insert(15);
+	t1.insert(3);
+	t1.insert(7);
+	t1.insert(13);
+	t1.insert(17);
+	t1.insert(1);
+	t1.insert(9);
+	t1.insert(8);
+	// t1.insert(11);
+	insert_debug(t1, 11);
+
+	delete_debug(t1, 11);
+
+	ft::Red_Black_Tree<int>::iterator f = t1.find(0);
+
+	if (f != t1.end())
+		std::cout << "found " << *f << std::endl;
+	else
+		std::cout << "not found " << std::endl;
+
 	// insert_debug(t1, 5);
 	// insert_debug(t1, 3);
+	// delete_debug(t1, 3);
+	// insert_debug(t1, 6);
+	// delete_debug(t1, 5);
+	// insert_debug(t1, 7);
+	// delete_debug(t1, 7);
+	// delete_debug(t1, 8);
+	// delete_debug(t1, 6);
 	// insert_debug(t1, 7);
 	// insert_debug(t1, 1);
 	// insert_debug(t1, 9);
@@ -367,11 +403,11 @@ int main() {
 	// insert_debug(t1, 8);
 	// insert_debug(t1, 2);
 
-	int i = 1;
-	while(i < 25){
-		insert_debug(t1,  i);
-		insert_debug(t1, 25 - i++);
-	}
+	// int i = 1;
+	// while(i < 25){
+	// 	insert_debug(t1,  i);
+	// 	insert_debug(t1, 25 - i++);
+	// }
 		
 	
 	// check_tree(t1);
@@ -390,6 +426,8 @@ int main() {
 
 	while (b != e)
 		std::cout << *b++ << std::endl;
+
+	std::cout << t1.max_size() << std::endl;
 
 
 	// ft::RBNode<int>* p = t1.get_root();
