@@ -65,7 +65,6 @@ public:
         insert(begin, end);
     }
 
-    //TODO: implement this
     virtual ~Red_Black_Tree() {
         this->clear();
     };
