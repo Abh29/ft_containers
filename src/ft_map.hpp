@@ -78,7 +78,7 @@ public:
     explicit map( const Compare& comp, const Allocator& alloc = Allocator() ) :
     _allocator(alloc),
     _compare(comp),
-    _RBT()
+    _RBT(value_compare(_compare))
     {};
 
     //TODO: check the iterator's type
@@ -88,7 +88,7 @@ public:
             const Allocator& alloc = Allocator() ):
     _allocator(alloc),
     _compare(comp),
-    _RBT()
+    _RBT(value_compare(_compare))
     {
         this->insert(first, last);
     };
@@ -97,7 +97,9 @@ public:
     _allocator(other._allocator),
     _compare(other._compare),
     _RBT(other._RBT)
-    {};
+    {
+        // _RBT = other._RBT;
+    };
 
     virtual ~map() {this->clear(); };
 
@@ -105,7 +107,7 @@ public:
         if (this == &other)
             return (*this);
         this->clear();
-        this->insert(other.begin(), other.end());
+        _RBT = other._RBT;
         return (*this);
     };
 
@@ -156,9 +158,12 @@ public:
 
     //TODO: check the iterator's category
     template< class InputIt >
-    void insert( InputIt first, InputIt last ) {
-        while (first != last)
-            _RBT.insert(*first++);
+    void insert( InputIt first, InputIt last,
+    typename ft::enable_if<!is_integral<InputIt>::value, InputIt>::type* = ft_nullptr) {
+        while (first != last) {
+            _RBT.insert(*first);
+            ++first;
+        }
     };
 
     void erase( iterator pos ) {

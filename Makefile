@@ -4,13 +4,14 @@ VALFLAGS= 	--vgdb=full \
 			--show-leak-kinds=all\
 			--track-origins=yes\
 			--verbose
+MAIN = test.cpp
 
 all:
-	c++ $(CFLAGS) main.cpp
+	c++ $(CFLAGS) $(MAIN)
 
 
 test:
-	c++ -g -std=c++98 main.cpp
+	c++ -g -std=c++98 $(MAIN)
 
 
 gdb: test
