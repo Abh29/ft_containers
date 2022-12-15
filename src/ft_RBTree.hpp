@@ -38,17 +38,17 @@ protected:
 
 public:
 
-    Red_Black_Tree():
+    Red_Black_Tree(const Compare& comp = ft::less<T>()):
     _root(ft_nullptr),
     _size(),
     _node_alloc(node_allocator()),
     _val_alloc(value_allocator()),
-    _comp(Compare())
+    _comp(comp)
     {};
 
     Red_Black_Tree(const Red_Black_Tree& other):
-    _root(other.root),
-    _size(other.size),
+    _root(other._root),
+    _size(other._size),
     _node_alloc(other._node_alloc),
     _val_alloc(other._val_alloc),
     _comp(other._comp)
@@ -126,7 +126,7 @@ public:
     }
 
     ft::pair<iterator, bool> insert(node_pointer p_node) {
-        ft::pair<iterator, bool> out;
+        ft::pair<iterator, bool> out = ft::make_pair(iterator(_comp), false);
         if (p_node == ft_nullptr)
             throw std::invalid_argument("can not insert a null in the tree!");
         value_type key = p_node->data;
@@ -134,12 +134,11 @@ public:
             _root = p_node;
             _root->is_black = true;
             ++_size;
-            out = ft::pair<iterator, bool>(iterator(_root), true);
+            out = ft::pair<iterator, bool>(iterator(_root, _comp), true);
         }
         else {
             //bst insert
             node_pointer tmp = _root;
-            node_pointer u;
 
             while (true){
                 if (_comp(key, tmp->data)){
@@ -163,11 +162,11 @@ public:
                         tmp = tmp->right;
                     }
                 } else {
-                    return (ft::pair<iterator, bool>(iterator(tmp), false));
+                    return (ft::pair<iterator, bool>(iterator(tmp, _comp), false));
                 }
             }
             ++_size;
-            out = out = ft::pair<iterator, bool>(iterator(p_node), true);
+            out = out = ft::pair<iterator, bool>(iterator(p_node, _comp), true);
         }
         return out;
     };
@@ -210,8 +209,34 @@ public:
 
     //TODO: implement this
     void clear() {
+        if (_root == ft_nullptr)
+            return;
 
+        // iterator b = this->begin();
+        // iterator e = this->end();
+        // node_pointer tmp;
+
+        std::cout << "clear " << _size << std::endl;
+
+        // while (b != e) {
+        //     tmp = b.base();
+        //     ++b;
+        //     delete_node(tmp);
+        // }
+
+        dell_rec(_root);
+
+        _root = ft_nullptr;
+        _size = 0;
     };
+
+    void dell_rec(node_pointer node) {
+        if (node == ft_nullptr)
+            return;
+        dell_rec(node->left);
+        dell_rec(node->right);
+        delete_node(node);
+    }
 
     void swap(const Red_Black_Tree &other) {
         node_pointer    tmp_r = _root;
@@ -549,7 +574,8 @@ private:
         // _node_alloc.destroy(node);
         // _node_alloc.deallocate(node);
         _val_alloc.destroy(&node->data);
-        delete node;
+        _node_alloc.destroy(node);
+        // delete node;
     }
 
 };

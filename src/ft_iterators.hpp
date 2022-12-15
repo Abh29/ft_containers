@@ -156,7 +156,8 @@ public:
 
 template< class T1, class T2 >
 bool operator==( const ft::pair<T1,T2>& lhs, const ft::pair<T1,T2>& rhs ) {
-    return (lhs.first == rhs.first) && (lhs.second == rhs.second);
+    // return (lhs.first == rhs.first) && (lhs.second == rhs.second);
+    return lhs.first == rhs.first;
 };
 
 template< class T1, class T2 >
@@ -166,9 +167,10 @@ bool operator!=( const ft::pair<T1,T2>& lhs, const ft::pair<T1,T2>& rhs ) {
 
 template< class T1, class T2 >
 bool operator<( const ft::pair<T1,T2>& lhs, const ft::pair<T1,T2>& rhs ) {
-    if (lhs.first == rhs.first)
-        return lhs.second < rhs.second;
-    return lhs.first < rhs.second;
+    // if (lhs.first == rhs.first)
+    //     return lhs.second < rhs.second;
+    // return lhs.first < rhs.second;
+    return lhs.first < rhs.first;
 };
 
 template< class T1, class T2 >

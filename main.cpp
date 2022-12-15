@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <map>
 #include "src/ft_vector.hpp"
 #include "src/ft_map.hpp"
 
@@ -43,49 +44,6 @@ bool vect_equal(std::vector<T>& vs, ft::vector<T>& vf){
 		return false;
 	return true;
 }
-
-
-// int main2() {
-//     std::vector<int*> v;
-//     ft::vector<int> fv;
-
-//     int ints[] = {1, 2, 3, 4, 77};
-
-//     v.push_back(ints);
-//     v.push_back(ints + 1);
-//     v.push_back(ints + 2);
-//     v.push_back(ints + 3);
-
-//     std::vector<int*> v2(v);
-
-//     *v.at(1) = 42;
-
-//     print_vector(v);
-
-//     print_vector_size(v);
-
-//     v.insert(v.end(), ints + 4);
-
-//     print_vector(v);
-    
-//     print_vector_size(v);
-
-//     // v.assign(2000, ints);
-
-//     // print_vector_size(v);
-
-//     int a = 5;
-//     int b = 6;
-//     int d;
-
-//     d = a += b;
-
-//     std::cout << a << " " << b << " " << d << std::endl;
-
-//     std::is_integral<int> t;
-
-// };
-
 
  template <class Vector>
     bool Ok(Vector v)
@@ -258,28 +216,7 @@ int main2(int argc, char** argv) {
 }
 
 
-// typedef struct Buffer
-// {
-// 	int idx;
-// 	char buff[1000];
-// }	t_buff;
 
-// int main() {
-	
-// 	ft::vector<int> v;
-
-// 	v.push_back(1);
-// 	v.push_back(2);
-// 	v.push_back(3);
-
-
-// 	for(ft::vector<int>::iterator i = v.begin(); i != v.end(); i++)
-// 		std::cout << *i << std::endl;
-
-
-
-// 	return 0;
-// }
 #include <stdio.h>
 template<class T>
 std::string print_node(ft::RBNode<T>*& p) {
@@ -355,85 +292,222 @@ void delete_debug(ft::Red_Black_Tree<T>& tree, T value) {
 }
 
 
-int main() {
+// int main3() {
 
-	ft::Red_Black_Tree<int> t1;
-	// ft::RBNode<int>* p;
+// 	ft::Red_Black_Tree<int> t1;
+// 	// ft::RBNode<int>* p;
 	
-	ft::Red_Black_Tree<int>::iterator b, e;
+// 	ft::Red_Black_Tree<int>::iterator b, e;
 
 
-	// std::cout << t1.size() << std::endl;
+// 	// std::cout << t1.size() << std::endl;
 
-	t1.insert(12);
-	t1.insert(5);
-	t1.insert(15);
-	t1.insert(3);
-	t1.insert(7);
-	t1.insert(13);
-	t1.insert(17);
-	t1.insert(1);
-	t1.insert(9);
-	t1.insert(8);
-	// t1.insert(11);
-	insert_debug(t1, 11);
+// 	t1.insert(12);
+// 	t1.insert(5);
+// 	t1.insert(15);
+// 	t1.insert(3);
+// 	t1.insert(7);
+// 	t1.insert(13);
+// 	t1.insert(17);
+// 	t1.insert(1);
+// 	t1.insert(9);
+// 	t1.insert(8);
+// 	// t1.insert(11);
+// 	insert_debug(t1, 11);
 
-	delete_debug(t1, 11);
+// 	delete_debug(t1, 11);
 
-	ft::Red_Black_Tree<int>::iterator f = t1.find(0);
+// 	ft::Red_Black_Tree<int>::iterator f = t1.find(0);
 
-	if (f != t1.end())
-		std::cout << "found " << *f << std::endl;
-	else
-		std::cout << "not found " << std::endl;
+// 	if (f != t1.end())
+// 		std::cout << "found " << *f << std::endl;
+// 	else
+// 		std::cout << "not found " << std::endl;
 
-	// insert_debug(t1, 5);
-	// insert_debug(t1, 3);
-	// delete_debug(t1, 3);
-	// insert_debug(t1, 6);
-	// delete_debug(t1, 5);
-	// insert_debug(t1, 7);
-	// delete_debug(t1, 7);
-	// delete_debug(t1, 8);
-	// delete_debug(t1, 6);
-	// insert_debug(t1, 7);
-	// insert_debug(t1, 1);
-	// insert_debug(t1, 9);
-	// insert_debug(t1, 6);
-	// insert_debug(t1, 8);
-	// insert_debug(t1, 2);
+// 	// insert_debug(t1, 5);
+// 	// insert_debug(t1, 3);
+// 	// delete_debug(t1, 3);
+// 	// insert_debug(t1, 6);
+// 	// delete_debug(t1, 5);
+// 	// insert_debug(t1, 7);
+// 	// delete_debug(t1, 7);
+// 	// delete_debug(t1, 8);
+// 	// delete_debug(t1, 6);
+// 	// insert_debug(t1, 7);
+// 	// insert_debug(t1, 1);
+// 	// insert_debug(t1, 9);
+// 	// insert_debug(t1, 6);
+// 	// insert_debug(t1, 8);
+// 	// insert_debug(t1, 2);
 
-	// int i = 1;
-	// while(i < 25){
-	// 	insert_debug(t1,  i);
-	// 	insert_debug(t1, 25 - i++);
-	// }
+// 	// int i = 1;
+// 	// while(i < 25){
+// 	// 	insert_debug(t1,  i);
+// 	// 	insert_debug(t1, 25 - i++);
+// 	// }
 		
 	
-	// check_tree(t1);
+// 	// check_tree(t1);
 
-	// insert_debug(t1, 1);
-	// insert_debug(t1, 2);
-	// insert_debug(t1, 3);
+// 	// insert_debug(t1, 1);
+// 	// insert_debug(t1, 2);
+// 	// insert_debug(t1, 3);
 
-	// print_tree(t1.get_root(), t1.height());
-	// std::cout << "********************" << std::endl;
+// 	// print_tree(t1.get_root(), t1.height());
+// 	// std::cout << "********************" << std::endl;
 
-	// std::cout << t1.size() << std::endl;
+// 	// std::cout << t1.size() << std::endl;
 
-	b = t1.begin();
-	e = t1.end();
+// 	b = t1.begin();
+// 	e = t1.end();
 
-	while (b != e)
-		std::cout << *b++ << std::endl;
+// 	while (b != e)
+// 		std::cout << *b++ << std::endl;
 
-	std::cout << t1.max_size() << std::endl;
+// 	std::cout << t1.max_size() << std::endl;
 
 
-	// ft::RBNode<int>* p = t1.get_root();
-	// print_tree(t1.get_root(), t1.height());
+// 	// ft::RBNode<int>* p = t1.get_root();
+// 	// print_tree(t1.get_root(), t1.height());
+
+// }
+
+
+int main4() {
+
+	ft::map<int, std::string > fm;
+	std::map<int, std::string > sm;
+
+	// ft::pair<ft::map<int, std::string>::iterator, bool> out0 = ft::make_pair(fm.value_comp(), false);
+	ft::pair<ft::map<int, std::string>::iterator, bool> out;
+
+	std::pair<std::map<int, std::string>::iterator, bool> out2;
+
+
+	 out2 = sm.insert(std::make_pair(1, "first"));
+	std::cout << (out2.first)->second << " - " << out2.second << std::endl;
+	 out2 = sm.insert(std::make_pair(1, "first2"));
+	std::cout << (out2.first)->second << " - " << out2.second << std::endl;
+	sm.insert(std::make_pair(6, "second"));
+	sm.insert(std::make_pair(5, "third"));
+
+	std::cout << sm.size() << std::endl;
+
+	std::map<int, std::string>::iterator bs, es;
+
+	bs = sm.begin();
+	es = sm.end();
+
+	while (bs != es){
+		std::cout << "key: " << bs->first << ", value: " << bs->second << std::endl;
+		++bs;
+	}
+
+	std::cout << sm.lower_bound(2)->second << std::endl;
+	std::cout << sm.upper_bound(2)->second << std::endl;
+
+
+
+
+	//  out = fm.insert(ft::make_pair(1, "first"));
+	// std::cout << (out.first)->second << " - " << out.second << std::endl;
+	//  out = fm.insert(ft::make_pair(1, "first2"));
+	// std::cout << (out.first)->second << " - " << out.second << std::endl;
+	// fm.insert(ft::make_pair(6, "second"));
+	// fm.insert(ft::make_pair(5, "third"));
+
+	// std::cout << fm.size() << std::endl;
+
+	// ft::map<int, std::string>::iterator b, e;
+
+	// b = fm.begin();
+	// e = fm.end();
+
+	// while (b != e){
+	// 	std::cout << "key: " << b->first << ", value: " << b->second << std::endl;
+	// 	++b;
+	// }
+
+	// std::cout << fm.lower_bound(1)->second << std::endl;
+	// std::cout << fm.upper_bound(1)->second << std::endl;
+
+
+
+	return 0;
 
 }
 
 
+// int main(int argc, char** argv) {
+// 	// if (argc != 2)
+// 	// {
+// 	// 	std::cerr << "Usage: ./test seed" << std::endl;
+// 	// 	std::cerr << "Provide a seed please" << std::endl;
+// 	// 	std::cerr << "Count value:" << COUNT << std::endl;
+// 	// 	return 1;
+// 	// }
+// 	// const int seed = atoi(argv[1]);
+// 	int seed = 13;
+// 	srand(seed);
 
+// 	ft::vector<std::string> vector_str;
+// 	ft::vector<int> vector_int;
+// 	ft::vector<Buffer> vector_buffer;
+// 	ft::map<int, int> map_int;
+
+// 	for (int i = 0; i < COUNT; i++)
+// 	{
+// 		vector_buffer.push_back(Buffer());
+// 	}
+
+// 	for (int i = 0; i < COUNT; i++)
+// 	{
+// 		const int idx = rand() % COUNT;
+// 		vector_buffer[idx].idx = 5;
+// 	}
+// 	ft::vector<Buffer>().swap(vector_buffer);
+
+// 	try
+// 	{
+// 		for (int i = 0; i < COUNT; i++)
+// 		{
+// 			const int idx = rand() % COUNT;
+// 			vector_buffer.at(idx);
+// 			std::cerr << "Error: THIS VECTOR SHOULD BE EMPTY!!" <<std::endl;
+// 		}
+// 	}
+// 	catch(const std::exception& e)
+// 	{
+// 		//NORMAL ! :P
+// 	}
+	
+// 	for (int i = 0; i < COUNT; ++i)
+// 	{
+// 		map_int.insert(ft::make_pair(rand(), rand()));
+// 	}
+
+// 	int sum = 0;
+// 	for (int i = 0; i < 10000; i++)
+// 	{
+// 		int access = rand();
+// 		sum += map_int[access];
+// 	}
+
+// 	std::cout << "should be constant with the same seed: " << sum << std::endl;
+
+// 	{
+// 		ft::map<int, int> copy = map_int;
+// 	}
+	
+// 	std::cout << std::endl;
+// 	return (0);
+// }
+
+int main() {
+	ft::map<int, std::string> fm;
+
+	for (int i = 0; i < 10; i++){
+		fm.insert(ft::make_pair(i, "hello"));
+	}
+	std::cout << fm.size() << std::endl;
+}

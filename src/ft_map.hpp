@@ -16,32 +16,18 @@ template< class Key, class T,
     class Allocator = std::allocator<ft::pair<const Key, T> >
 > class map {
 
-
 public:
+
     typedef Key                                                                     key_type;
     typedef T                                                                       mapped_type;
     typedef typename ft::pair<const Key, T>                                         value_type;
     typedef std::size_t                                                             size_type;
     typedef std::ptrdiff_t                                                          difference_type;
-    typedef Compare                                                                 key_compare;
-    typedef Allocator                                                               allocator_type;
-    typedef value_type&                                                             reference;
-    typedef const value_type&                                                       const_reference;
-    typedef typename Allocator::pointer                                             pointer;
-    typedef typename Allocator::const_pointer                                       const_pointer;
-    typedef typename Red_Black_Tree<value_type>::iterator                           iterator;
-    typedef typename Red_Black_Tree<const value_type>::iterator                     const_iterator;
-    typedef ft::reverse_iterator<iterator>                                          reverse_iterator;
-    typedef ft::reverse_iterator<const_iterator>                                    const_reverse_iterator;     
 
 
-private:
-    allocator_type                              _allocator;
-    key_compare                                 _compare;
-    Red_Black_Tree<value_type, Compare>         _RBT;
+     class value_compare {
 
-
-    class value_compare {
+        friend class map<Key, T, Compare, Allocator>;
 
         public:
             typedef bool                result_type;
@@ -50,21 +36,43 @@ private:
 
         protected:
             Compare                     comp;
-            value_compare( Compare c ): comp(c) {};
-    
+            
         public:
+        
+            value_compare( Compare c  = Compare()): comp(c) {};
+            
             bool operator()( const value_type& lhs, const value_type& rhs ) const {
                 return comp(lhs.first, rhs.first);
             };
 	
     };
 
+
+   
+    typedef Compare                                                                 key_compare;
+    typedef Allocator                                                               allocator_type;
+    typedef value_type&                                                             reference;
+    typedef const value_type&                                                       const_reference;
+    typedef typename Allocator::pointer                                             pointer;
+    typedef typename Allocator::const_pointer                                       const_pointer;
+    typedef typename Red_Black_Tree<value_type, value_compare>::iterator            iterator;
+    typedef typename Red_Black_Tree<const value_type, value_compare>::iterator      const_iterator;
+    typedef ft::reverse_iterator<iterator>                                          reverse_iterator;
+    typedef ft::reverse_iterator<const_iterator>                                    const_reverse_iterator;     
+
+
+private:
+    allocator_type                              _allocator;
+    key_compare                                 _compare;
+    Red_Black_Tree<value_type, value_compare>         _RBT;
+
+
 public:
     //constructor
     map():
     _allocator(),
     _compare(),
-    _RBT()
+    _RBT(value_compare(_compare))
     {};
 
     explicit map( const Compare& comp, const Allocator& alloc = Allocator() ) :
@@ -116,7 +124,7 @@ public:
         if (it == this->end())
             this->insert(ft::make_pair(key, T()));
         it = this->find(key);
-        return *it.second;
+        return it->second;
     };
 
     //Iterator
@@ -137,7 +145,7 @@ public:
     //Modifiers
     void clear() {_RBT.clear(); };
 
-    std::pair<iterator, bool> insert( const value_type& value ) { 
+    ft::pair<iterator, bool> insert( const value_type& value ) { 
         return _RBT.insert(value);
     };
 
@@ -203,10 +211,9 @@ public:
     iterator lower_bound( const Key& key ) {
         iterator b = this->begin();
         iterator e = this->end();
-        value_type p_key = value_type(key, T());
 
         while (b != e) {
-            if (!_comp(*b, p_key))
+            if (!_compare(b->first, key))
                 break;
             ++b;
         }
@@ -220,10 +227,9 @@ public:
     iterator upper_bound( const Key& key ) {
         iterator b = this->begin();
         iterator e = this->end();
-        value_type p_key = value_type(key, T());
 
         while (b != e) {
-            if (_comp(p_key, *b))
+            if (_compare(key, b->first))
                 break;
             ++b;
         }
