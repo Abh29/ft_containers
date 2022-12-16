@@ -4,6 +4,7 @@
 
 #include "ft_utils.hpp"
 #include "ft_iterators.hpp"
+#include <string.h>
 
 
 namespace ft {
@@ -84,7 +85,10 @@ public:
     _end(ft_nullptr),
     _capacity(ft_nullptr)
     {
-        insert(begin(), other.begin(), other.end());
+        // insert(begin(), other.begin(), other.end());
+        reserve(other.size());
+        memcpy(_start, other._start, other.size() * sizeof(T));
+        _end += other.size();
     };
 
     //destructor
@@ -162,16 +166,10 @@ public:
     };
 
     reference operator[]( size_type pos ) {
-        if (pos >= size())
-            throw std::out_of_range(ft::to_string(pos) + std::string(" >= this->size() \
-            (which is ") + ft::to_string(this->size()) + std::string(")"));
         return at(pos);
     }
 
     const_reference operator[]( size_type pos ) const {
-        if (pos >= size())
-            throw std::out_of_range(ft::to_string(pos) + std::string(" >= this->size() \
-            (which is ") + ft::to_string(this->size()) + std::string(")"));
         return at(pos);
     }
 
@@ -204,7 +202,11 @@ public:
 
     //Capacity
     bool empty() const {return _start == _end ? true : false; };
-    size_type size() const {return distance(begin(), end()); };
+    size_type size() const {
+        // return distance(begin(), end()); 
+        return _end - _start;
+        // return distance(_start, _end);
+    };
     size_type max_size() const {return allocator_type().max_size(); };
     void reserve( size_type new_cap ) {
         if (new_cap <= capacity())
@@ -218,8 +220,13 @@ public:
         _start = _allocator.allocate( new_cap );
         _end = _start;
         _capacity = _start + new_cap;
-        while (p != p_end)
-            _allocator.construct(_end++, *p++);
+
+
+        // std::copy(p_start, p_end, _end);
+        memcpy(_end, p_start, (p_end - p_start) * sizeof(T));
+        _end += (p_end - p_start);
+        // while (p != p_end)
+        //     _allocator.construct(_end++, *p++);
         _allocator.deallocate(p_start, distance(p_start, p_end));
     };
     size_type capacity() const {return ft::distance(_start, _capacity); };

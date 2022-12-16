@@ -62,9 +62,9 @@ public:
 
 
 private:
-    allocator_type                              _allocator;
-    key_compare                                 _compare;
-    Red_Black_Tree<value_type, value_compare>         _RBT;
+    allocator_type                                      _allocator;
+    key_compare                                         _compare;
+    Red_Black_Tree<value_type, value_compare>           _c;
 
 
 public:
@@ -72,13 +72,13 @@ public:
     map():
     _allocator(),
     _compare(),
-    _RBT(value_compare(_compare))
+    _c(value_compare(_compare))
     {};
 
     explicit map( const Compare& comp, const Allocator& alloc = Allocator() ) :
     _allocator(alloc),
     _compare(comp),
-    _RBT(value_compare(_compare))
+    _c(value_compare(_compare))
     {};
 
     //TODO: check the iterator's type
@@ -88,7 +88,7 @@ public:
             const Allocator& alloc = Allocator() ):
     _allocator(alloc),
     _compare(comp),
-    _RBT(value_compare(_compare))
+    _c(value_compare(_compare))
     {
         this->insert(first, last);
     };
@@ -96,9 +96,9 @@ public:
     map( const map& other ):
     _allocator(other._allocator),
     _compare(other._compare),
-    _RBT(other._RBT)
+    _c(other._c)
     {
-        // _RBT = other._RBT;
+        // _c = other._c;
     };
 
     virtual ~map() {this->clear(); };
@@ -107,7 +107,7 @@ public:
         if (this == &other)
             return (*this);
         this->clear();
-        _RBT = other._RBT;
+        _c = other._c;
         return (*this);
     };
 
@@ -130,9 +130,9 @@ public:
     };
 
     //Iterator
-    iterator begin() {return _RBT.begin(); };
-    const_iterator begin() const {return const_iterator(_RBT.min()); };
-    iterator end() {return _RBT.end(); };
+    iterator begin() {return _c.begin(); };
+    const_iterator begin() const {return const_iterator(_c.min()); };
+    iterator end() {return _c.end(); };
     const_iterator end() const {return const_iterator(ft_nullptr); };
     reverse_iterator rbegin() { return reverse_iterator(this->end()); };
     const_reverse_iterator rbegin() const {const_reverse_iterator(this->end()); };
@@ -140,20 +140,20 @@ public:
     const_reverse_iterator rend() const {return const_reverse_iterator(this->begin()); };
 
     //Capacity
-    bool empty() const {return _RBT.empty(); };
-    size_type size() const {return _RBT.size(); };
-    size_type max_size() const {return _RBT.max_size(); };
+    bool empty() const {return _c.empty(); };
+    size_type size() const {return _c.size(); };
+    size_type max_size() const {return _c.max_size(); };
 
     //Modifiers
-    void clear() {_RBT.clear(); };
+    void clear() {_c.clear(); };
 
     ft::pair<iterator, bool> insert( const value_type& value ) { 
-        return _RBT.insert(value);
+        return _c.insert(value);
     };
 
     iterator insert( iterator pos, const value_type& value ) {
         (void) pos;
-        return _RBT.insert(value).first;
+        return _c.insert(value).first;
     };
 
     //TODO: check the iterator's category
@@ -161,29 +161,29 @@ public:
     void insert( InputIt first, InputIt last,
     typename ft::enable_if<!is_integral<InputIt>::value, InputIt>::type* = ft_nullptr) {
         while (first != last) {
-            _RBT.insert(*first);
+            _c.insert(*first);
             ++first;
         }
     };
 
     void erase( iterator pos ) {
-        _RBT.remove(*pos);
+        _c.remove(*pos);
     };
 
     void erase( iterator first, iterator last ) {
         while (first != last)
-            _RBT.remove(*first++);
+            _c.remove(*first++);
     };
 
     size_type erase( const Key& key ) {
-        return _RBT.remove(ft::pair<key_type, mapped_type>(key, mapped_type()));
+        return _c.remove(ft::pair<key_type, mapped_type>(key, mapped_type()));
     };
 
     void swap( map& other ) {
         allocator_type  tmp_a = _allocator;
         key_compare     tmp_c = _compare;
 
-        _RBT.swap(other._RBT);
+        _c.swap(other._c);
 
         _allocator = other._allocator;
         _compare = other._compare;
@@ -194,11 +194,11 @@ public:
 
     //Lookup
     size_type count( const Key& key ) const {
-        return _RBT.find(ft::pair<key_type, mapped_type>(key, mapped_type())) != _RBT.end();
+        return _c.find(ft::pair<key_type, mapped_type>(key, mapped_type())) != _c.end();
     };
 
     iterator find( const Key& key ) {
-        return _RBT.find(ft::pair<key_type, mapped_type>(key, mapped_type()));
+        return _c.find(ft::pair<key_type, mapped_type>(key, mapped_type()));
     };
 
 	const_iterator find( const Key& key ) const {
@@ -206,11 +206,11 @@ public:
     };
 
     ft::pair<iterator,iterator> equal_range( const Key& key ) {
-        return make_pair(this->lower_bound(key), this->upper_bound(key));
+        return ft::make_pair(this->lower_bound(key), this->upper_bound(key));
     };	
 
     ft::pair<const_iterator,const_iterator> equal_range( const Key& key ) const {
-        return make_pair(this->lower_bound(key), this->upper_bound(key));
+        return ft::make_pair(this->lower_bound(key), this->upper_bound(key));
     };
 
     iterator lower_bound( const Key& key ) {

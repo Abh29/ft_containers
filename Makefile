@@ -18,4 +18,10 @@ gdb: test
 	gdb ./a.out
 
 valgrind:
-	@valgrind $(VALFLAGS) ./a.out 
+	@valgrind $(VALFLAGS) ./a.out
+
+profile:
+	c++ $(CFLAGS) -O0 -pg $(MAIN)
+
+profile_png:
+	gprof ./a.out gmon.out | gprof2dot -w -s | dot -Gdpi=200 -Tpng -o output.png
