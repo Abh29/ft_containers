@@ -60,6 +60,25 @@ public:
 		c.pop_back();
 	};
 
+
+    template< class _T, class _Container >
+    friend bool operator==( const ft::stack<_T,_Container>& lhs, const ft::stack<_T,_Container>& rhs );
+
+    template< class _T, class _Container >
+    friend bool operator!=( const ft::stack<_T,_Container>& lhs, const ft::stack<_T,_Container>& rhs );
+
+    template< class _T, class _Container >
+    friend bool operator<( const ft::stack<_T,_Container>& lhs, const ft::stack<_T,_Container>& rhs );
+
+    template< class _T, class _Container >
+    friend bool operator<=( const ft::stack<_T,_Container>& lhs, const ft::stack<_T,_Container>& rhs );
+
+    template< class _T, class _Container >
+    friend bool operator>( const ft::stack<_T,_Container>& lhs, const ft::stack<_T,_Container>& rhs );
+
+    template< class _T, class _Container >
+    friend bool operator>=( const ft::stack<_T,_Container>& lhs, const ft::stack<_T,_Container>& rhs );
+
 };
 
 template< class T, class Container >

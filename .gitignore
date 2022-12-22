@@ -31,5 +31,6 @@
 *.out
 *.app
 
-main.cpp
-test.cpp
+main*.cpp
+test*.cpp
+tester/

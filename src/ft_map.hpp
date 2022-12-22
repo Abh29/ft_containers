@@ -10,11 +10,11 @@
 
 namespace ft {
 
-
 template< class Key, class T,
     class Compare = ft::less<Key>,
     class Allocator = std::allocator<ft::pair<const Key, T> >
-> class map {
+>
+class map {
 
 public:
 
@@ -40,7 +40,7 @@ public:
         public:
         
             value_compare( Compare c  = Compare()): comp(c) {};
-            
+
             bool operator()( const value_type& lhs, const value_type& rhs ) const {
                 return comp(lhs.first, rhs.first);
             };
@@ -49,16 +49,16 @@ public:
 
 
    
-    typedef Compare                                                                 key_compare;
-    typedef Allocator                                                               allocator_type;
-    typedef value_type&                                                             reference;
-    typedef const value_type&                                                       const_reference;
-    typedef typename Allocator::pointer                                             pointer;
-    typedef typename Allocator::const_pointer                                       const_pointer;
-    typedef typename Red_Black_Tree<value_type, value_compare>::iterator            iterator;
-    typedef typename Red_Black_Tree<const value_type, value_compare>::iterator      const_iterator;
-    typedef ft::reverse_iterator<iterator>                                          reverse_iterator;
-    typedef ft::reverse_iterator<const_iterator>                                    const_reverse_iterator;     
+    typedef Compare                                                                     key_compare;
+    typedef Allocator                                                                   allocator_type;
+    typedef value_type&                                                                 reference;
+    typedef const value_type&                                                           const_reference;
+    typedef typename Allocator::pointer                                                 pointer;
+    typedef typename Allocator::const_pointer                                           const_pointer;
+    typedef typename Red_Black_Tree<value_type, value_compare>::iterator                iterator;
+    typedef typename Red_Black_Tree<value_type, value_compare>::const_iterator          const_iterator;
+    typedef typename Red_Black_Tree<value_type, value_compare>::reverse_iterator        reverse_iterator;
+    typedef typename Red_Black_Tree<value_type, value_compare>::const_reverse_iterator  const_reverse_iterator;
 
 
 private:
@@ -93,7 +93,7 @@ public:
         this->insert(first, last);
     };
 
-    map( const map& other ):
+    map(const map& other ):
     _allocator(other._allocator),
     _compare(other._compare),
     _c(other._c)
@@ -131,16 +131,16 @@ public:
 
     //Iterator
     iterator begin() {return _c.begin(); };
-    const_iterator begin() const {return const_iterator(_c.min()); };
+    const_iterator begin() const {return _c.begin();};
     iterator end() {return _c.end(); };
-    const_iterator end() const {return const_iterator(ft_nullptr); };
-    reverse_iterator rbegin() { return reverse_iterator(this->end()); };
-    const_reverse_iterator rbegin() const {const_reverse_iterator(this->end()); };
-    reverse_iterator rend() {return reverse_iterator(this->begin()); };
-    const_reverse_iterator rend() const {return const_reverse_iterator(this->begin()); };
+    const_iterator end() const {return _c.end(); };
+    reverse_iterator rbegin() { return _c.rbegin(); };
+    const_reverse_iterator rbegin() const {return _c.rbegin(); };
+    reverse_iterator rend() {return _c.rend(); };
+    const_reverse_iterator rend() const {return _c.rend(); };
 
     //Capacity
-    bool empty() const {return _c.empty(); };
+    bool empty() const {return _c.is_empty(); };
     size_type size() const {return _c.size(); };
     size_type max_size() const {return _c.max_size(); };
 
@@ -194,7 +194,7 @@ public:
 
     //Lookup
     size_type count( const Key& key ) const {
-        return _c.find(ft::pair<key_type, mapped_type>(key, mapped_type())) != _c.end();
+        return (_c.find(ft::make_pair(key, mapped_type())) != _c.end());
     };
 
     iterator find( const Key& key ) {

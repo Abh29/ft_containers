@@ -7,13 +7,11 @@
 
 namespace ft {
 
-
-template<	class T, class Compare = ft::less<T>,
-            class Node = ft::RBNode<T>, 
-			class NAllocator = std::allocator<Node>,
-			class Allocator = std::allocator<T> >
+template<   class T, class Compare = ft::less<T>,
+            class Node = ft::RBNode<T>,
+		    class NAllocator = std::allocator<Node>,
+		    class Allocator = std::allocator<T> >
 class Red_Black_Tree {
-
 
 public:
 
@@ -24,13 +22,18 @@ public:
 	typedef NAllocator								node_allocator;
 	typedef Allocator								value_allocator;
 	typedef ft::RBIterator<Node, Compare>			iterator;
+    typedef ft::RBConstIterator<Node, Compare>      const_iterator;
+    typedef ft::reverse_iterator<iterator>          reverse_iterator;
+    typedef ft::reverse_iterator<const_iterator>    const_reverse_iterator;
     typedef std::size_t                             size_type;
     typedef std::ptrdiff_t                          difference_type;
 
 
 protected:
+
     node_pointer            _root;
     size_type               _size;
+    node_pointer            _nil;
     node_allocator          _node_alloc;
     value_allocator         _val_alloc;
     Compare                 _comp;
@@ -38,35 +41,43 @@ protected:
 
 public:
 
-    Red_Black_Tree(const Compare& comp = ft::less<T>()):
-    _root(ft_nullptr),
+    explicit Red_Black_Tree(const Compare& comp = ft::less<T>()):
     _size(),
     _node_alloc(node_allocator()),
     _val_alloc(value_allocator()),
     _comp(comp)
-    {};
+    {
+        nil_alloc();
+    };
 
     Red_Black_Tree(const Red_Black_Tree& other):
-    _root(ft_nullptr),
     _size(),
     _node_alloc(other._node_alloc),
     _val_alloc(other._val_alloc),
     _comp(other._comp)
     {
-        insert(other.begin(), other.end());
+        nil_alloc();
+        const_iterator b = other.begin();
+        while (b != other.end()) {
+            insert(*b);
+            ++b;
+        }
     };
 
 
     template<class Iterator>
     Red_Black_Tree(Iterator& begin, Iterator& end):
-        _node_alloc(node_allocator()),
-        _val_alloc(value_allocator())
+    _size(),
+    _node_alloc(node_allocator()),
+    _val_alloc(value_allocator())
     {
+        nil_alloc();
         insert(begin, end);
     }
 
     virtual ~Red_Black_Tree() {
         this->clear();
+        _node_alloc.deallocate(_nil, 1);
     };
 
     //TODO: delete this
@@ -84,7 +95,7 @@ public:
     }
 
     bool is_empty() const {
-        return (_root == ft_nullptr);
+        return (_root == _nil);
     };
 
     size_type size() const {
@@ -95,59 +106,58 @@ public:
         return _node_alloc.max_size();
     }
 
+    //TODO: change this to O(1)
     node_pointer max() const {
         if (is_empty())
-            return ft_nullptr;
+            return _nil;
         node_pointer tmp = _root;
-        while (tmp->right)
+        while (tmp->right != _nil)
             tmp = tmp->right;
         return tmp;
     };
 
+    //TODO: change this to O(1)
     node_pointer min() const {
         if (is_empty())
-            return ft_nullptr;
+            return _nil;
         node_pointer tmp = _root;
-        while (tmp->left)
+        while (tmp->left != _nil)
             tmp = tmp->left;
         return tmp;
     };
 
-    iterator begin() {
-        return min();
-    };
+    iterator begin() { return iterator(_nil->right, _nil); };
+    const_iterator begin() const { return const_iterator (_nil->right, _nil); }
+    reverse_iterator rbegin() {return reverse_iterator(end()); }
+    const_reverse_iterator  rbegin() const {return const_reverse_iterator(end()); }
+    iterator end() { return iterator(_nil); };
+    const_iterator end() const {return const_iterator (_nil); }
+    reverse_iterator rend() {return reverse_iterator(begin()); }
+    const_reverse_iterator rend() const {return const_reverse_iterator(begin()); }
 
-    iterator end() {
-        return ft::RBIterator<Node, Compare>(ft_nullptr);
-    };
-
-    iterator begin() const {
-        return min();
-    }
-
-    iterator end() const {
-        return iterator(ft_nullptr);
-    }
-
+//    TODO: change _nil
     ft::pair<iterator, bool> insert(const value_type& value) {
         node_pointer node = _node_alloc.allocate(1);
         _node_alloc.construct(node, value);
+        node->parent = node->right = node->left = _nil;
         ft::pair<iterator, bool> out = insert(node);
         if (!out.second)
             delete_node(node);
         return out;
     }
 
-    ft::pair<iterator, bool> insert(node_pointer p_node) {
-        ft::pair<iterator, bool> out = ft::make_pair(iterator(_comp), false);
-        if (p_node == ft_nullptr)
-            throw std::invalid_argument("can not insert a null in the tree!");
+    ft::pair<iterator, bool> insert(const node_pointer p_node) {
+        ft::pair<iterator, bool> out = ft::make_pair(iterator(_nil), false);
+        if (p_node == ft_nullptr || p_node == _nil)
+            throw std::invalid_argument("can not insert a nil node into the tree!");
         value_type key = p_node->data;
-        if (_root == ft_nullptr){
+        p_node->parent = p_node->right = p_node->left = _nil;
+        if (_root == _nil){
             _root = p_node;
             _root->is_black = true;
+            _nil->right = _nil->left = _root;
             ++_size;
-            out = ft::pair<iterator, bool>(iterator(_root, _comp), true);
+            out = ft::pair<iterator, bool>(iterator(_root, _nil), true);
         }
         else {
             //bst insert
@@ -155,9 +165,11 @@ public:
 
             while (true){
                 if (_comp(key, tmp->data)){
-                    if (tmp->left == ft_nullptr){
+                    if (tmp->left == _nil){
                         tmp->left = p_node;
                         p_node->parent = tmp;
+                        if (_nil->right->left != _nil)
+                            _nil->right = _nil->right->left;
                         if (!tmp->is_black)
                             fix_insert(p_node);
                         break;
@@ -165,9 +177,11 @@ public:
                         tmp = tmp->left;
                     }
                 } else if (_comp(tmp->data, key)) {
-                    if (tmp->right == ft_nullptr){
+                    if (tmp->right == _nil){
                         tmp->right = p_node;
                         p_node->parent = tmp;
+                        if (_nil->left->right != _nil)
+                            _nil->left = _nil->left->right;
                         if (!tmp->is_black)
                             fix_insert(p_node);
                         break;
@@ -175,11 +189,11 @@ public:
                         tmp = tmp->right;
                     }
                 } else {
-                    return (ft::pair<iterator, bool>(iterator(tmp, _comp), false));
+                    return (ft::pair<iterator, bool>(iterator(tmp, _nil), false));
                 }
             }
             ++_size;
-            out = out = ft::pair<iterator, bool>(iterator(p_node, _comp), true);
+            out = ft::pair<iterator, bool>(iterator(p_node, _nil), true);
         }
         return out;
     };
@@ -192,14 +206,15 @@ public:
         }
     }
 
+    //TODO: change _nil
     size_type remove(const value_type& key) {
 
-        if (_root == ft_nullptr)
+        if (_root == _nil)
             return 0;
 
         node_pointer tmp = _root;
 
-        while (tmp) {
+        while (tmp != _nil) {
             if (_comp(key, tmp->data))
                 tmp = tmp->left;
             else if (_comp(tmp->data, key))
@@ -207,17 +222,18 @@ public:
             else
                 return remove(tmp);
         }
+
         return 0;
     }
 
-    iterator find(const value_type& key) {
+    iterator find(const value_type& key) const {
 
-        if (_root == ft_nullptr)
-            return end();
+        if (_root == _nil)
+            return _nil;
 
         node_pointer tmp = _root;
 
-        while (tmp) {
+        while (tmp != _nil) {
             if (_comp(key, tmp->data))
                 tmp = tmp->left;
             else if (_comp(tmp->data, key))
@@ -225,21 +241,23 @@ public:
             else
                 return tmp;
         }
-        return end();
+        return _nil;
     }
 
     //TODO: implement this
     void clear() {
-        if (_root == ft_nullptr)
+        if (_root == _nil)
             return;
         dell_rec(_root);
-        _root = ft_nullptr;
+        _nil->right = _nil->left = _nil;
+        _root = _nil;
         _size = 0;
     };
 
 
-    void swap(const Red_Black_Tree &other) {
+    void swap(Red_Black_Tree &other) {
         node_pointer    tmp_r = _root;
+        node_pointer    tmp_l = _nil;
         size_type       tmp_s = _size;
         node_allocator  tmp_n = _node_alloc;
         value_allocator tmp_v = _val_alloc;
@@ -247,6 +265,7 @@ public:
 
 
         _root = other._root;
+        _nil  = other._nil;
         _size = other._size;
         _node_alloc = other._node_alloc;
         _val_alloc = other._val_alloc;
@@ -254,6 +273,7 @@ public:
 
 
         other._root = tmp_r;
+        other._nil = tmp_l;
         other._size = tmp_s;
         other._node_alloc = tmp_n;
         other._val_alloc = tmp_v;
@@ -266,7 +286,7 @@ private:
     int height(node_pointer node) const
     {
         node_pointer tmp = node;
-        if (tmp == ft_nullptr)
+        if (tmp == _nil)
             return 0;
         else {
             int lheight = height(tmp->left);
@@ -281,11 +301,11 @@ private:
 
     void fix_insert(node_pointer node) {
         node_pointer tmp = node;
-        node_pointer u, g;
+        node_pointer u;
 
         while (tmp != _root && !tmp->parent->is_black) {
             u = uncle(tmp);
-            if (!u || u->is_black) {
+            if (u->is_black) {
                 if (is_left_child(tmp) && is_right_child(tmp->parent)){
                     rotate_right(tmp->parent);
                     tmp =  tmp->right;
@@ -309,14 +329,14 @@ private:
                 u->is_black = true;
                 tmp->parent->parent->is_black = false;
             }
-            
+
             tmp = tmp->parent->parent;
         }
         _root->is_black = true;
     }
 
     void rotate_right(node_pointer& node) {
-        if (node == ft_nullptr || node->left == ft_nullptr)
+        if (node == _nil || node->left == _nil)
             return;
 
         node_pointer l = node->left;
@@ -325,7 +345,7 @@ private:
         node->parent = l;
         node->left = l->right;
 
-        if (l->right)
+        if (l->right != _nil)
             l->right->parent = node;
         if (node == _root)
             _root = l;
@@ -335,11 +355,11 @@ private:
             p->left = l;
         l->right = node;
         l->parent = p;
-        
+
     }
 
     void rotate_left(node_pointer& node) {
-        if (node == ft_nullptr || node->right == ft_nullptr)
+        if (node == _nil || node->right == _nil)
             return;
 
         node_pointer r = node->right;
@@ -347,10 +367,10 @@ private:
 
         node->parent = r;
         node->right = r->left;
-        
-        if (r->left)
+
+        if (r->left != _nil)
             r->left->parent = node;
-        if (p == ft_nullptr)
+        if (p == _nil)
             _root = r;
         else if (p->right == node)
             p->right = r;
@@ -358,13 +378,13 @@ private:
             p->left = r;
         r->left = node;
         r->parent = p;
-        
+
     }
 
     node_pointer uncle(node_pointer& node) {
-        if (node == ft_nullptr || node->parent == ft_nullptr ||
-             node->parent->parent == ft_nullptr )
-            return _root; // root is the uncle of no one 
+        if (node == _nil || node->parent == _nil ||
+             node->parent->parent == _nil )
+            return _nil;
         if (node->parent->parent->right == node->parent)
             return node->parent->parent->left;
         else
@@ -372,94 +392,19 @@ private:
     }
 
     bool is_left_child(node_pointer& node) {
-        // if (node == ft_nullptr || node->parent == ft_nullptr)
+        // if (node == _nil || node->parent == _nil)
         //     return false;
         return (node->parent->left == node);
     }
 
     bool is_right_child(node_pointer& node) {
-        // if (node == ft_nullptr || node->parent == ft_nullptr)
+        // if (node == _nil || node->parent == _nil)
         //     return false;
         return (node->parent->right == node);
     }
 
-    size_type remove2(node_pointer node) {
-
-        node_pointer tmp = ft_nullptr;
-
-        if (node == ft_nullptr)
-            return 0;
-        if (node->right == ft_nullptr) {
-            tmp = node->left;
-            if (node == _root) {
-                _root = node->left;
-                if (tmp) {
-                    _root->parent = ft_nullptr;
-                    _root->is_black = true;   
-                }
-                delete_node(node);
-                --_size;
-                return 1;
-            } else {
-                if (is_right_child(node))
-                    node->parent->right = node->left;
-                else
-                    node->parent->left = node->left;
-                if (tmp)
-                    node->left->parent = node->parent;
-                if (tmp && !tmp->is_black)
-                    tmp->is_black = true;
-                else if (node->is_black)
-                    fix_delete(node); 
-                delete_node(node);
-                --_size;
-                return 1;
-            }
-        }else if (node->left == ft_nullptr) {
-            tmp = node->right;
-            if (node == _root) {
-                _root = node->right;
-                if (tmp) {
-                    _root->parent = ft_nullptr;
-                    _root->is_black = true;   
-                }
-                delete_node(node);
-                --_size;
-                return 1;
-            } else {
-                if (is_right_child(node))
-                    node->parent->right = node->right;
-                else
-                    node->parent->left = node->right;
-                if (tmp)
-                    node->right->parent = node->parent;
-                if (node->is_black)
-                    fix_delete(node);
-                delete_node(node);
-                --_size;
-                return 1;
-            }
-        }else {
-            tmp = node->left;
-            while (tmp->right)
-                tmp = tmp->right;
-            _val_alloc.destroy(&node->data);
-            node->data = tmp->data;
-            if (is_right_child(tmp))
-                tmp->parent->right = tmp->right;
-            else 
-                tmp->parent->left = tmp->right;
-            if (tmp->left)
-                tmp->left->parent = tmp->parent;
-            if (tmp->is_black)
-                fix_delete(tmp);
-            delete_node(tmp);
-        }
-        return 0;
-    }
-
     void RB_transplant(node_pointer u, node_pointer v) {
-        if (u == ft_nullptr)
+        if (u == ft_nullptr || u == _nil)
             return;
         if (u == _root)
             _root = v;
@@ -471,27 +416,28 @@ private:
             v->parent = u->parent;
     }
 
+    //TODO: confirm this
     int remove(node_pointer node) {
         node_pointer y = node;
         node_pointer x;
         bool o_black = node->is_black;
 
-        if (node == ft_nullptr)
+        if (node == ft_nullptr || node == _nil)
             return 0;
 
-        if (node->left == ft_nullptr) {
+        if (node->left == _nil) {
             x = node->right;
             RB_transplant(node, node->right);
-        } else if (node->right == ft_nullptr) {
+        } else if (node->right == _nil) {
             x = node->left;
             RB_transplant(node, node->left);
         } else {
             y = node->right;
-            while (y->left)
+            while (y->left != _nil)
                 y = y->left;
             o_black = y->is_black;
             x = y->right;
-            if (y->parent == node && x)
+            if (y->parent == node && x != _nil)
                 x->parent = y;
             else {
                 RB_transplant(y, y->right);
@@ -502,11 +448,15 @@ private:
             y->left = node->left;
             y->left->parent = y;
             y->is_black = node->is_black;
-            if (o_black)
-                RB_delete_fixup(x);
-            delete_node(node);
-            --_size;
         }
+        if (o_black)
+            RB_delete_fixup(x);
+        if (_nil->right == node)
+            _nil->right = min();
+        if (_nil->left == node)
+            _nil->left = max();
+        delete_node(node);
+        --_size;
         return 1;
     }
 
@@ -518,17 +468,17 @@ private:
         while (x != _root && x->is_black) {
             if (is_left_child(x)) {
                 w = x->parent->right;
-                if (w && !w->is_black) {
+                if (!w->is_black) {
                     w->is_black = true;
                     x->parent->is_black = false;
                     rotate_left(x->parent);
                     w = x->parent->right;
                 }
-                if ((!w->left || w->left->is_black) && (!w->right || w->right->is_black)) {
+                if (w->left->is_black && w->right->is_black) {
                     w->is_black = false;
                     x = x->parent;
                 } else {
-                    if (!w->right || w->right->is_black) {
+                    if (w->right->is_black) {
                         w->left->is_black = true;
                         w->is_black = false;
                         rotate_right(w);
@@ -542,17 +492,17 @@ private:
                 }
             } else {
                 w = x->parent->left;
-                if (w && !w->is_black) {
+                if (!w->is_black) {
                     w->is_black = true;
                     x->parent->is_black = false;
                     rotate_right(x->parent);
                     w = x->parent->left;
                 }
-                if ((!w->left || w->left->is_black) && (!w->right || w->right->is_black)) {
+                if (w->left->is_black && w->right->is_black) {
                     w->is_black = false;
                     x = x->parent;
                 } else {
-                    if (!w->left || w->left->is_black) {
+                    if (w->left->is_black) {
                         w->right->is_black = true;
                         w->is_black = false;
                         rotate_right(w);
@@ -571,7 +521,7 @@ private:
 
 
     void dell_rec(node_pointer node) {
-        if (node == ft_nullptr)
+        if (node == _nil)
             return;
         dell_rec(node->left);
         dell_rec(node->right);
@@ -582,6 +532,15 @@ private:
         _val_alloc.destroy(&node->data);
         _node_alloc.destroy(node);
         _node_alloc.deallocate(node, 1);
+    }
+
+    void nil_alloc() {
+        _nil = _node_alloc.allocate(1);
+        _nil->right = _nil;
+        _nil->left = _nil;
+        _nil->parent = _nil;
+        _nil->is_black = true;
+        _root = _nil;
     }
 
 };
@@ -595,7 +554,3 @@ private:
 
 
 #endif //__FT_RBTREE__
-
-
-
-

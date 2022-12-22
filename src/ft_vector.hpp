@@ -67,7 +67,8 @@ public:
 
 
     template< class InputIt >
-    vector( InputIt first, InputIt last, const Allocator& alloc = Allocator() ):
+    vector( InputIt first, InputIt last, const Allocator& alloc = Allocator(),
+            typename ft::enable_if<!ft::is_integral<InputIt>::value, InputIt>::type* = ft_nullptr):
     _allocator(alloc)
     {
         difference_type diff = ft::distance(first, last);
@@ -127,7 +128,8 @@ public:
     };
 
     template< class InputIt >
-    void assign( InputIt first, InputIt last ) {
+    void assign( InputIt first, InputIt last,
+                 typename ft::enable_if<!ft::is_integral<InputIt>::value, InputIt>::type* = ft_nullptr) {
         clear();
         if (first == last)
             return;
@@ -191,10 +193,10 @@ public:
     };
 
     //iterators
-    iterator begin() {return _start; };
-    const_iterator begin() const {return _start; };
-    iterator end() {return _end; };
-    const_iterator end() const {return _end; };
+    iterator begin() {return iterator(_start); };
+    const_iterator begin() const {return const_iterator(_start); };
+    iterator end() {return iterator(_end); };
+    const_iterator end() const {return const_iterator(_end); };
     reverse_iterator rbegin() {return reverse_iterator(_end); };
     const_reverse_iterator rbegin() const {return const_reverse_iterator(_end); };
     reverse_iterator rend() {return reverse_iterator(_start); };
@@ -227,7 +229,8 @@ public:
         _end += (p_end - p_start);
         // while (p != p_end)
         //     _allocator.construct(_end++, *p++);
-        _allocator.deallocate(p_start, distance(p_start, p_end));
+        // _allocator.deallocate(p_start, distance(p_start, p_end));
+        _allocator.deallocate(p_start, p_end - p_start);
     };
     size_type capacity() const {return ft::distance(_start, _capacity); };
 
@@ -332,8 +335,8 @@ public:
     iterator erase( iterator pos ) {
         pointer p = pos;
         _allocator.destroy(p);
-        while (p != _end)
-            *p = *(p++ + 1);
+        while (++p != _end)
+            *(p - 1) = *p;
         _end--;
         return pos;
     };
@@ -344,7 +347,8 @@ public:
         while (p != last)
             _allocator.destroy(p++);
         while (p != _end)
-            *(p - count) = *p++;
+            *(p - count - 1) = *p++;
+        _end -= count;
         return first;
     };
 
