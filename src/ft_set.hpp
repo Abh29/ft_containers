@@ -12,27 +12,26 @@ namespace ft {
 
 template< class Key,
     	class Compare = std::less<Key>,
-    	class Allocator = std::allocator<Key>> 
+    	class Allocator = std::allocator<Key> >
 		class set {
-
 
 public:
 
-	typedef Key																	key_type;
-	typedef Key																	value_type;
-	typedef	std::size_t															size_type;
-	typedef	std::ptrdiff_t														difference_type;
-	typedef	Compare																key_compare;
-	typedef	Compare																value_compare;
-	typedef Allocator															allocator_type;
-	typedef value_type&															reference;
-	typedef	const value_type&													const_reference;
-	typedef typename Allocator::pointer											pointer;
-	typedef typename Allocator::const_pointer									const_pointer;
-	typedef	typename Red_Black_Tree<value_type, value_compare>::iterator		iterator;
-	typedef typename Red_Black_Tree<const value_type, value_compare>::iterator	const_iterator;
-	typedef ft::reverse_iterator<iterator>										reverse_iterator;
-	typedef ft::reverse_iterator<const_iterator>								const_reverse_iterator;
+	typedef Key																			key_type;
+	typedef Key																			value_type;
+	typedef	std::size_t																	size_type;
+	typedef	std::ptrdiff_t																difference_type;
+	typedef	Compare																		key_compare;
+	typedef	Compare																		value_compare;
+	typedef Allocator																	allocator_type;
+	typedef value_type&																	reference;
+	typedef	const value_type&															const_reference;
+	typedef typename Allocator::pointer													pointer;
+	typedef typename Allocator::const_pointer											const_pointer;
+	typedef	typename Red_Black_Tree<value_type, value_compare>::iterator				iterator;
+	typedef typename Red_Black_Tree<value_type, value_compare>::const_iterator  		const_iterator;
+    typedef typename Red_Black_Tree<value_type, value_compare>::reverse_iterator        reverse_iterator;
+    typedef typename Red_Black_Tree<value_type, value_compare>::const_reverse_iterator  const_reverse_iterator;
 
 
 private:
@@ -80,8 +79,6 @@ public:
 		if (this == &other)
             return (*this);
         this->clear();
-		_allocator = other._allocator;
-		_compare = other._compare;
         _c = other._c;
         return (*this);
 	};
@@ -91,17 +88,17 @@ public:
 	};
 
 	//iterator
-	iterator begin() {return _c.begin(); };
-    const_iterator begin() const {return const_iterator(_c.min()); };
+    iterator begin() {return _c.begin(); };
+    const_iterator begin() const {return _c.begin();};
     iterator end() {return _c.end(); };
-    const_iterator end() const {return const_iterator(ft_nullptr); };
-    reverse_iterator rbegin() { return reverse_iterator(this->end()); };
-    const_reverse_iterator rbegin() const {const_reverse_iterator(this->end()); };
-    reverse_iterator rend() {return reverse_iterator(this->begin()); };
-    const_reverse_iterator rend() const {return const_reverse_iterator(this->begin()); };
+    const_iterator end() const {return _c.end(); };
+    reverse_iterator rbegin() { return _c.rbegin(); };
+    const_reverse_iterator rbegin() const {return _c.rbegin(); };
+    reverse_iterator rend() {return _c.rend(); };
+    const_reverse_iterator rend() const {return _c.rend(); };
 
 	//Capacity
-    bool empty() const {return _c.empty(); };
+    bool empty() const {return _c.is_empty(); };
     size_type size() const {return _c.size(); };
     size_type max_size() const {return _c.max_size(); };
 
@@ -118,13 +115,14 @@ public:
 	};
 
 	//TODO: check iterator's category
-	template< class InputIt >
-	void insert( InputIt first, InputIt last ) {
-		while (first != last) {
+    template< class InputIt >
+    void insert( InputIt first, InputIt last,
+    typename ft::enable_if<!is_integral<InputIt>::value, InputIt>::type* = ft_nullptr) {
+        while (first != last) {
             _c.insert(*first);
             ++first;
         }
-	};
+    };
 
 	void erase( iterator pos ) {
 		_c.remove(*pos);
@@ -156,7 +154,7 @@ public:
 
 	//Lookup
 	size_type count( const Key& key ) const {
-		return _c.find(key) != _c.end();
+		return (_c.find(key) != _c.end());
 	};
 
 	iterator find( const Key& key ) {
