@@ -117,45 +117,14 @@ public:
     //assign
     void assign( size_type count, const T& value ) {
         clear();
-        if (count == 0)
-            return;
-        if (count > max_size())
-            throw std::length_error("cannot create std::vector larger than max_size()");
-        if (count > this->capacity()) {
-            if (_start)
-                _allocator.deallocate(_start, this->capacity());
-            _start = _allocator.allocate(count);
-            _end = _start;
-            _capacity = _start + count;
-        }
-        if (sizeof(value) <= 256) {
-            memset_v(_end, value, count, sizeof(value));
-            _end += count;
-        } else {
-            while (count--)
-                _allocator.construct(_end++, value);
-        }
-
+		_insert_count(_start, count, value);
     };
 
     template< class InputIt >
     void assign( InputIt first, InputIt last,
                  typename ft::enable_if<!ft::is_integral<InputIt>::value, InputIt>::type* = ft_nullptr) {
         clear();
-        if (first == last)
-            return;
-        size_type dist = ft::distance(first, last);
-        if (dist >= max_size())
-            throw std::length_error("cannot create std::vector larger than max_size()");
-        if (dist > this->capacity()) {
-            if (_start)
-                _allocator.deallocate(_start, this->capacity());
-            _start = _allocator.allocate(dist);
-            _end = _start;
-            _capacity = _start + dist;
-        }
-        _insert_at(_end, first, last);
-        _end += dist;
+		_insert_range(_start, first, last);
     };
 
     //get_allocator
@@ -282,14 +251,7 @@ public:
     };
 
     void resize( size_type count, T value = T() ) {
-        if (count > max_size())
-            throw std::length_error("new_size > max_size allowed");
-        if (count > capacity())
-            reserve(Max(count, 2 * size()));
-        while (count < size())
-            pop_back();
-        if (count > size())
-            insert(this->end(), count - size(), value);
+		_resize(count, value);
     };
 
     void swap( vector& other ) {
@@ -571,6 +533,35 @@ private:
         _end--;
         _allocator.destroy(_end);
     }
+
+	template<class U>
+	void _resize( size_type count, U value = U(),
+				  typename ft::enable_if<ft::is_integral<U>::value, U>::type* = ft_nullptr) {
+		if (count > max_size())
+			throw std::length_error("new_size > max_size allowed");
+		if (count > capacity())
+			reserve(Max(count, 2 * size()));
+		if (count < size())
+			_end -= count;
+		if (count > size())
+			insert(_end, count - size(), value);
+	};
+
+	template<class U>
+	void _resize( size_type count, U value = U(),
+				 typename ft::enable_if<!ft::is_integral<U>::value, U>::type* = ft_nullptr) {
+		if (count > max_size())
+			throw std::length_error("new_size > max_size allowed");
+		if (count > capacity())
+			reserve(Max(count, 2 * size()));
+		if (count > size())
+			insert(this->end(), count - size(), value);
+		else {
+			size_type diff = size() - count;
+			while (diff--)
+				_allocator.destroy(_end--);
+		}
+	};
 
 
 };
