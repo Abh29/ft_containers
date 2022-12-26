@@ -11,14 +11,18 @@ all:
 
 
 test:
-	c++ -g -std=c++98 $(MAIN)
+	make -C ./tester
+	./tester/ft_container_tester
+
+clean:
+	make -C ./tester fclean
 
 
 gdb: test
 	gdb ./a.out
 
 valgrind:
-	@valgrind $(VALFLAGS) ./a.out
+	@valgrind $(VALFLAGS) ./tester/ft_container_tester
 
 profile:
 	c++ $(CFLAGS) -O0 -pg $(MAIN)

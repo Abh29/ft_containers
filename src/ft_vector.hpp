@@ -59,10 +59,12 @@ public:
     _end(_start),
     _capacity(_start + count)
     {
-        
-        while (_end != _capacity)
-            _allocator.construct(_end++, value);
-        
+        if (ft::is_integral<T>::value) {
+            memset_v(_start, value, count, sizeof(T));
+            _end += count;
+        } else
+            while (_end != _capacity)
+                _allocator.construct(_end++, value);
     }
 
 
@@ -75,19 +77,24 @@ public:
         _start = _allocator.allocate(diff);
         _capacity = _start + diff;
         _end = _start;
-        while (first != last)
-            _allocator.construct(_end++, *first++);
+//        try {
+//            _insert_range(_start, first, last);
+//        } catch (...){
+//            _allocator.deallocate(_start, diff);
+//            _end = _start = _capacity = ft_nullptr;
+//            throw;
+//        }
+        _insert_at(_start, first, last);
+        _end += diff;
     };
-
 
     vector( const vector& other ):
     _allocator(other._allocator),
-    _start(ft_nullptr),
-    _end(ft_nullptr),
-    _capacity(ft_nullptr)
+    _start(_allocator.allocate(other.size())),
+    _end(_start),
+    _capacity(_start + other.size())
     {
-        // insert(begin(), other.begin(), other.end());
-        reserve(other.size());
+//        reserve(other.size());
         memcpy(_start, other._start, other.size() * sizeof(T));
         _end += other.size();
     };
@@ -114,17 +121,21 @@ public:
             return;
         if (count > max_size())
             throw std::length_error("cannot create std::vector larger than max_size()");
-        if (count <= this->capacity())
-            while (count--)
-                _allocator.construct(_end++, value);
-        else {
-            _allocator.deallocate(_start, this->capacity());
+        if (count > this->capacity()) {
+            if (_start)
+                _allocator.deallocate(_start, this->capacity());
             _start = _allocator.allocate(count);
             _end = _start;
             _capacity = _start + count;
+        }
+        if (sizeof(value) <= 256) {
+            memset_v(_end, value, count, sizeof(value));
+            _end += count;
+        } else {
             while (count--)
                 _allocator.construct(_end++, value);
         }
+
     };
 
     template< class InputIt >
@@ -133,20 +144,18 @@ public:
         clear();
         if (first == last)
             return;
-        difference_type dist = distance(first, last);
+        size_type dist = ft::distance(first, last);
         if (dist >= max_size())
             throw std::length_error("cannot create std::vector larger than max_size()");
-        if (dist <= this->capacity())
-            while (first != last)
-                _allocator.construct(_end++, *first++);
-        else {
-            _allocator.deallocate(_start, this->capacity());
+        if (dist > this->capacity()) {
+            if (_start)
+                _allocator.deallocate(_start, this->capacity());
             _start = _allocator.allocate(dist);
             _end = _start;
             _capacity = _start + dist;
-            while (first != last)
-                _allocator.construct(_end++, *first++);
         }
+        _insert_at(_end, first, last);
+        _end += dist;
     };
 
     //get_allocator
@@ -218,34 +227,206 @@ public:
         
         pointer p_start = _start;
         pointer p_end = _end;
-        pointer p = p_start;
         _start = _allocator.allocate( new_cap );
         _end = _start;
         _capacity = _start + new_cap;
-
-
-        // std::copy(p_start, p_end, _end);
-        memcpy(_end, p_start, (p_end - p_start) * sizeof(T));
+        _insert_at(_start, p_start, p_end);
         _end += (p_end - p_start);
-        // while (p != p_end)
-        //     _allocator.construct(_end++, *p++);
-        // _allocator.deallocate(p_start, distance(p_start, p_end));
         _allocator.deallocate(p_start, p_end - p_start);
     };
     size_type capacity() const {return ft::distance(_start, _capacity); };
 
     //Modifiers
     void clear(){
-        while(_end != _start)
-            _allocator.destroy(--_end);
+        if (ft::is_integral<T>::value)
+            _end = _start;
+        else
+            while(_end != _start)
+                _allocator.destroy(&*(--_end));
     };
 
-    iterator insert( iterator pos, const T& value ) {
-        pointer p, out;
+    iterator insert(iterator pos, const T& value) {
+        return _insert_val(pos, value);
+    }
+
+    void insert(iterator pos, size_type count, const T& value) {
+        _insert_count(pos, count, value);
+    }
+
+    template< class InputIt >
+    void insert(iterator pos, InputIt first, InputIt last,
+                typename ft::enable_if<!ft::is_integral<InputIt>::value, InputIt>::type* = ft_nullptr) {
+        _insert_range(pos, first, last);
+    };
+
+    iterator erase( iterator pos ) {
+        return _erase_pos(pos);
+    };
+
+    iterator erase( iterator first, iterator last ) {
+        return _erase_range(first, last);
+    };
+
+    void push_back( const T& value ) {
+        if (_end == _capacity)
+		{
+					int next_capacity = (this->size() > 0) ? (int)(this->size() * 2) : 1;
+					this->reserve(next_capacity);
+		}
+		_allocator.construct(_end, value);
+        _end++;
+    };
+
+    void pop_back() {
+        _pop_back<T>();
+    };
+
+    void resize( size_type count, T value = T() ) {
+        if (count > max_size())
+            throw std::length_error("new_size > max_size allowed");
+        if (count > capacity())
+            reserve(Max(count, 2 * size()));
+        while (count < size())
+            pop_back();
+        if (count > size())
+            insert(this->end(), count - size(), value);
+    };
+
+    void swap( vector& other ) {
+        swap(_start, other._start);
+        swap(_end, other._end);
+        swap(_capacity, other._capacity);
+    };
+
+private:
+    const_iterator const_begin() {return _start;};
+
+    template<typename InputIt>
+    void _insert_at(pointer pos, InputIt first, InputIt last, typename ft::enable_if<ft::_is_mem_cpy<InputIt>::value, InputIt>::type* = ft_nullptr) {
+        size_type n = ft::distance(first, last);
+        memcpy(pos, &(*first), n * sizeof(typename ft::iterator_traits<InputIt>::value_type));
+    }
+
+    template<typename InputIt>
+    void _insert_at(pointer pos, InputIt first, InputIt last, typename ft::enable_if<!ft::_is_mem_cpy<InputIt>::value, InputIt>::type* = ft_nullptr) {
+        while (first != last)
+            _allocator.construct(pos++, *first++);
+    }
+
+    template< class InputIt >
+    void _insert_range(iterator poss, InputIt first, InputIt last,
+                typename ft::enable_if<!ft::_is_mem_cpy<InputIt>::value, InputIt>::type* = ft_nullptr) {
+        if (first == last)
+            return;
+        difference_type count = ft::distance(first, last);
+        pointer p;
+        pointer pos = poss.base();
+        if (size() + count > max_size())
+            throw std::length_error("new_size > max_size allowed");
+        if (size() + count <= capacity()) {
+            p = _end += count;
+            while (p - count != pos) {
+                *p = *(p - count - 1);
+                --p;
+            }
+            while (last != first)
+                _allocator.construct(p--, *last--);
+        } else {
+            p = _start;
+            size_type cap = Max(size() + count, 2 * size());
+            pointer n_start = _allocator.allocate(cap);
+            pointer n_end = n_start;
+            try {
+                while (p != pos)
+                    *n_end++ = *p++;
+                while (first != last)
+                    _allocator.construct(n_end++, *first++);
+                while (p != _end)
+                    *n_end++ = *p++;
+                _allocator.deallocate(_start, capacity());
+                _start = n_start;
+                _end = n_end;
+                _capacity = _start + cap;
+            } catch (...) {
+                _allocator.deallocate(n_start, cap);
+                throw;
+            }
+        }
+    };
+
+    template< class InputIt >
+    void _insert_range(iterator pos, InputIt first, InputIt last,
+                typename ft::enable_if<ft::_is_mem_cpy<InputIt>::value, InputIt>::type* = ft_nullptr) {
+        if (first == last)
+            return;
+        difference_type count = ft::distance(first, last);
+        pointer p = pos;
+        if (count == 0)
+            return;
+        if (size() + count > max_size())
+            throw std::length_error("new_size > max_size allowed");
+        if (size() + count <= capacity()) {
+            memmove(p + count, p, (_end - p) * sizeof(T));
+            _end += count;
+            _insert_at(p, first, last);
+        } else {
+            size_type p_cap = capacity();
+            pointer p_start = _start;
+            pointer p_end = _end;
+            size_type cap = Max(size() + count, 2 * size());
+            _start = _allocator.allocate(cap);
+            _end = _start;
+            _capacity = _start + cap;
+            memcpy(_end, p_start, (pos - p_start) * sizeof(T));
+            _end += (pos - p_start);
+            _insert_at(_end, first, last);
+            _end += count;
+            memcpy(_end, pos, (p_end - pos)  * sizeof(T));
+            _end += (p_end - pos);
+            _allocator.deallocate(p_start, p_cap);
+        }
+    };
+
+    template<class U>
+    iterator _insert_val(iterator pos, const U& value, typename ft::enable_if<ft::is_integral<U>::value, U>::type* = ft_nullptr) {
+        pointer p = pos;
+        pointer out = ft_nullptr;
+
+        if (capacity() > size()) {
+            memmove(p + 1, p, (_end - p) * sizeof(T));
+            _allocator.construct(p, value);
+            ++_end;
+            out = p;
+        } else {
+            pointer p_start = _start;
+            pointer p_end = _end;
+            difference_type p_cap = capacity();
+            size_type cap = size() == 0 ? 1 : size() * 2;
+            _start = _allocator.allocate(cap);
+            _end = _start;
+            _capacity = _start + cap;
+            memcpy(_start, p_start, (p - p_start) * sizeof(T));
+            _end += (p - p_start);
+            _allocator.construct(_end, value);
+            out = _end;
+            memcpy(_end + 1, p, (p_end - p) * sizeof(T));
+            _end += p_end - p + 1;
+            _allocator.deallocate(p_start, p_cap);
+        }
+        return iterator(out);
+    }
+
+    template<class U>
+    iterator _insert_val( iterator pos, const U& value, typename ft::enable_if<!ft::is_integral<U>::value, U>::type* = ft_nullptr) {
+        pointer p = ft_nullptr;
+        pointer out = ft_nullptr;
+
         if (capacity() > size()) {
             p = _end++;
-            while (p != pos.base())
-                *p = *--p;
+            while (p != pos.base()) {
+                *p = *(p - 1);
+                --p;
+            }
             _allocator.construct(p, value);
             out = p;
         } else {
@@ -267,7 +448,39 @@ public:
         return iterator(out);
     };
 
-    void insert( iterator pos, size_type count, const T& value ) {
+    template<class U>
+    void _insert_count(iterator pos, size_type count, const U& value,
+    typename ft::enable_if<ft::_is_mem_cpy<U*>::value, U>::type* = ft_nullptr) {
+        pointer p = pos;
+        if (count == 0)
+            return;
+        if (size() + count > max_size())
+            throw std::length_error("new_size > max_size allowed");
+        if (size() + count <= capacity()) {
+            memmove(p + count, p, (_end - p) * sizeof(T));
+            _end += count;
+            memset_v(p, value, count, sizeof(T));
+        } else {
+            size_type p_cap = capacity();
+            size_type cap = Max(this->size() + count, 2 * this->size());
+            pointer p_start = _start;
+            pointer p_end = _end;
+            _start = _allocator.allocate(cap);
+            _end = _start;
+            _capacity = _start + cap;
+            memcpy(_end, p_start, (pos - p_start) * sizeof(T));
+            _end += (pos - p_start);
+            memset_v(_end, value, count, sizeof(T));
+            _end += count;
+            memcpy(_end, pos, (p_end - pos) * sizeof(T));
+            _end += p_end - pos;
+            _allocator.deallocate(p_start, p_cap);
+        }
+    }
+
+    template<class U>
+    void _insert_count(iterator pos, size_type count, const U& value,
+    typename ft::enable_if<!ft::_is_mem_cpy<U*>::value, U>::type* = ft_nullptr) {
         pointer p;
         if (count == 0)
             return;
@@ -275,8 +488,10 @@ public:
             throw std::length_error("new_size > max_size allowed");
         if (size() + count <= capacity()) {
             p = _end += count;
-            while (p - count != pos.base())
-                *p = *(p-- - count);
+            while (p - count != pos.base()) {
+                *p = *(p - count);
+                --p;
+            }
             while (count--)
                 _allocator.construct(--p, value);
         } else {
@@ -295,109 +510,68 @@ public:
                 *_end++ = *p++;
             _allocator.deallocate(p_start, p_cap);
         }
-    };
+    }
 
-    // insert for non integral types
-    template< class InputIt >
-    void insert(iterator poss, InputIt first, InputIt last,
-    typename ft::enable_if<!is_integral<InputIt>::value, InputIt>::type = InputIt()) {
-        if (first == last)
-            return;
-        difference_type count = distance(first, last);
-        pointer p;
-        pointer pos = poss.base();
-        if (size() + count > max_size())
-            throw std::length_error("new_size > max_size allowed");
-        if (size() + count <= capacity()) {
-            p = _end += count;
-            while (p - count != pos)
-                *p = *(p-- - count - 1);
-            while (last != first)
-                _allocator.construct(p--, *last--);
-        } else {
-            size_type p_cap = capacity();
-            pointer p_start = p = _start;
-            pointer p_end = _end;
-            size_type cap = Max(size() + count, 2 * size());
-            _start = _allocator.allocate(cap);
-            _end = _start;
-            _capacity = _start + cap;
-            while (p != pos)
-                *_end++ = *p++;
-            while (first != last)
-                _allocator.construct(_end++, *first++);
-            while (p != p_end)
-                *_end++ = *p++;
-            _allocator.deallocate(p_start, p_cap);
-        }
-    };
 
-    iterator erase( iterator pos ) {
+    template<class U>
+    iterator _erase_pos(U pos, typename ft::enable_if<!ft::is_integral<typename ft::iterator_traits<U>::value_type>::value, U>::type* = ft_nullptr) {
         pointer p = pos;
         _allocator.destroy(p);
         while (++p != _end)
             *(p - 1) = *p;
         _end--;
         return pos;
-    };
+    }
 
-    iterator erase( iterator first, iterator last ) {
+    template<class U>
+    iterator _erase_pos(U pos, typename ft::enable_if<ft::is_integral<typename ft::iterator_traits<U>::value_type>::value, U>::type* = ft_nullptr) {
+        pointer p = pos;
+        memmove(p, pos + 1, (_end - pos) * sizeof(T));
+        _end--;
+        return pos;
+    }
+
+    template<class U>
+    iterator _erase_range(U first, U last,
+                          typename ft::enable_if<!ft::is_integral<typename ft::iterator_traits<U>::value_type>::value, U>::type* = ft_nullptr) {
         size_type count = distance((pointer)first, (pointer) last);
         pointer p = first;
         while (p != last)
             _allocator.destroy(p++);
-        while (p != _end)
-            *(p - count - 1) = *p++;
+        while (p != _end) {
+            *(p - count) = *p;
+            ++p;
+        }
         _end -= count;
         return first;
-    };
+    }
 
-    void push_back( const T& value ) {
-        //insert(_end, value);
-        if (_end == _capacity)
-		{
-					int next_capacity = (this->size() > 0) ? (int)(this->size() * 2) : 1;
-					this->reserve(next_capacity);
-		}
-		_allocator.construct(_end, value);
-        _end++;
-    };
+    template<class U>
+    iterator _erase_range(U first, U last,
+                          typename ft::enable_if<ft::is_integral<typename ft::iterator_traits<U>::value_type>::value, U>::type* = ft_nullptr) {
+        size_type count = distance((pointer)first, (pointer) last);
+        memmove(first, last, (_end - last) * sizeof(T));
+        _end -= count;
+        return first;
+    }
 
-    void pop_back() {
+    void swap(pointer& a, pointer& b) {
+        pointer p = a;
+        a = b;
+        b = p;
+    }
+
+    template<class _T>
+    void _pop_back(typename ft::enable_if<ft::is_integral<_T>::value, _T>::type* = ft_nullptr) {
+        _end--;
+    }
+
+    template<class _T>
+    void _pop_back(typename ft::enable_if<!ft::is_integral<_T>::value, _T>::type* = ft_nullptr) {
         _end--;
         _allocator.destroy(_end);
-    };
+    }
 
-    void resize( size_type count, T value = T() ) {
-        if (count > max_size())
-            throw std::length_error("new_size > max_size allowed");
-        if (count > capacity())
-            reserve(Max(count, 2 * size()));
-        while (count < size())
-            pop_back();
-        if (count > size())
-            insert(this->end(), count - size(), value);
-    };
-
-    void swap( vector& other ) {
-        // if (other == *this)
-        //     return;
-        pointer p = other._start;
-        other._start = _start;
-        _start = p;
-        p = other._end;
-        other._end = _end;
-        _end = p;
-        p = other._capacity;
-        other._capacity = _capacity;
-        _capacity = p;
-        allocator_type a = other._allocator;
-        other._allocator = _allocator;
-        _allocator = a;
-    };
-
-private:
-    const_iterator const_begin() {return _start;};
 
 };
 
@@ -447,6 +621,7 @@ private:
     void swap( ft::vector<T,Alloc>& lhs, ft::vector<T,Alloc>& rhs ) {
         lhs.swap(rhs);
     };
+
 
 }
 
