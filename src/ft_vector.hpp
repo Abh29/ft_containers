@@ -542,7 +542,7 @@ private:
 		if (count > capacity())
 			reserve(Max(count, 2 * size()));
 		if (count < size())
-			_end -= count;
+			_end -= (size() - count);
 		if (count > size())
 			insert(_end, count - size(), value);
 	};
