@@ -1,4 +1,3 @@
-#pragma once
 #ifndef __FT_ITERATORs__
 #define __FT_ITERATORs__
 

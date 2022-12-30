@@ -80,7 +80,7 @@ public:
         _node_alloc.deallocate(_nil, 1);
     };
 
-    //TODO: delete this
+
     node_pointer get_root() const {return _root; };
 
     size_type height() const {return height(_root); };
@@ -214,7 +214,7 @@ public:
 		}
 	}
 
-    //TODO: change _nil
+
     size_type remove(const value_type& key) {
 
         if (_root == _nil)
@@ -305,7 +305,7 @@ public:
         return _nil;
     }
 
-    //TODO: implement this
+
     void clear() {
         if (_root == _nil)
             return;

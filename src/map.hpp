@@ -81,7 +81,7 @@ public:
     _c(value_compare(_compare))
     {};
 
-    //TODO: check the iterator's type
+
     template< class InputIt >
     map(    InputIt first, InputIt last,   
             const Compare& comp = Compare(), 
@@ -168,7 +168,7 @@ public:
         return _c.insert(value).first;
     };
 
-    //TODO: check the iterator's category
+
     template< class InputIt >
     void insert( InputIt first, InputIt last,
     typename ft::enable_if<!is_integral<InputIt>::value, InputIt>::type* = ft_nullptr) {
@@ -229,7 +229,7 @@ public:
         return ft::make_pair(this->lower_bound(key), this->upper_bound(key));
     };
 
-	//TODO: check T() ?
+
     iterator lower_bound( const Key& key ) {
 		if (empty())
 			return end();

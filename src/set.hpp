@@ -114,7 +114,7 @@ public:
 		return _c.insert(value).first;
 	};
 
-	//TODO: check iterator's category
+
     template< class InputIt >
     void insert( InputIt first, InputIt last,
     typename ft::enable_if<!is_integral<InputIt>::value, InputIt>::type* = ft_nullptr) {

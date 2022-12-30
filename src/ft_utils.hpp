@@ -1,4 +1,3 @@
-#pragma once
 #ifndef __FT_UTILS__
 #define __FT_UTILS__
 
