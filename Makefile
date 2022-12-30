@@ -26,13 +26,14 @@ clean:
 	rm -rf ./tester/sets_output
 	rm -rf ./tester/stacks_output
 	rm -rf ./tester/vectors_output
+	rm -f a.out
 
 
 gdb: test
 	gdb ./a.out
 
 valgrind:
-	@valgrind $(VALFLAGS) ./tester/ft_container_tester
+	@valgrind $(VALFLAGS) ./a.out
 
 profile:
 	c++ $(CFLAGS) -O0 -pg $(MAIN)
