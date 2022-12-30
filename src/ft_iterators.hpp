@@ -35,8 +35,8 @@ namespace ft {
 
     template< class T1, class T2 >
     bool operator==( const ft::pair<T1,T2>& lhs, const ft::pair<T1,T2>& rhs ) {
-        // return (lhs.first == rhs.first) && (lhs.second == rhs.second);
-        return lhs.first == rhs.first;
+         return (lhs.first == rhs.first) && (lhs.second == rhs.second);
+//        return lhs.first == rhs.first;
     };
 
     template< class T1, class T2 >
@@ -46,10 +46,7 @@ namespace ft {
 
     template< class T1, class T2 >
     bool operator<( const ft::pair<T1,T2>& lhs, const ft::pair<T1,T2>& rhs ) {
-        // if (lhs.first == rhs.first)
-        //     return lhs.second < rhs.second;
-        // return lhs.first < rhs.second;
-        return lhs.first < rhs.first;
+		return (lhs.first < rhs.first) || (!(rhs.first < lhs.first) && (lhs.second < rhs.second));
     };
 
     template< class T1, class T2 >
@@ -340,7 +337,7 @@ struct random_access_iterator: public ft::iterator< typename ft::iterator_traits
 
         reverse_iterator operator++( int ) {
             reverse_iterator tmp = *this;
-            ++current;
+            --current;
             return tmp;
         };
 
@@ -467,11 +464,11 @@ struct random_access_iterator: public ft::iterator< typename ft::iterator_traits
                 _nil(other._nil)
         {};
 
-//    template<class T, class C>
-//    RBIterator(const RBIterator<T, C>& other):
-//    ft::iterator<ft::bidirectional_iterator_tag, T>(other),
-//    _comp(other.compare())
-//    {};
+		template<class _N, class _C>
+		RBIterator(const RBIterator<_N, _C>& other):
+				ft::iterator<ft::bidirectional_iterator_tag, Node>(other),
+				_nil(other.nil())
+		{};
 
         virtual ~RBIterator() {};
 
@@ -481,6 +478,13 @@ struct random_access_iterator: public ft::iterator< typename ft::iterator_traits
             return *this;
         };
 
+
+		template<typename _N, typename _C>
+		RBIterator& operator=(const RBIterator<_N, _C>& other){
+			this->_elm = other.base();
+			this->_nil= other.nil();
+			return *this;
+		}
 
         reference operator*() const {
             return this->_elm->data;

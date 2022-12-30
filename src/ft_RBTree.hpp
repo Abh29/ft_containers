@@ -198,13 +198,21 @@ public:
         return out;
     };
 
-    void insert(const iterator& begin, const iterator& end) {
+    void insert(iterator& begin, iterator& end) {
         iterator b = begin;
         while (b != end) {
             insert(*b);
             ++b;
         }
     }
+
+	void insert(const const_iterator& begin, const const_iterator& end) {
+		const_iterator b = begin;
+		while (b != end) {
+			insert(*b);
+			++b;
+		}
+	}
 
     //TODO: change _nil
     size_type remove(const value_type& key) {
@@ -225,6 +233,59 @@ public:
 
         return 0;
     }
+
+	size_type remove(node_pointer node) {
+		node_pointer y = node;
+		node_pointer x;
+		bool o_black = node->is_black;
+
+		if (node == ft_nullptr || node == _nil)
+			return 0;
+
+
+		if (node->left == _nil) {
+			x = node->right;
+			RB_transplant(node, node->right);
+		} else if (node->right == _nil) {
+			x = node->left;
+			RB_transplant(node, node->left);
+		} else {
+			y = node->right;
+			while (y->left != _nil)
+				y = y->left;
+			o_black = y->is_black;
+			x = y->right;
+			if (y->parent == node && x != _nil)
+				x->parent = y;
+			else {
+				RB_transplant(y, y->right);
+				y->right = node->right;
+				y->right->parent = y;
+			}
+			RB_transplant(node, y);
+			y->left = node->left;
+			y->left->parent = y;
+			y->is_black = node->is_black;
+		}
+		if (o_black)
+			RB_delete_fixup(x);
+		if (_nil->right == node){
+//			iterator it(node);
+//			++it;
+//			_nil->right = it.base();
+			_nil->right = min();
+		}
+		if (_nil->left == node){
+			_nil->left = max();
+//			iterator it(node);
+//			--it;
+//			_nil->right = it.base();
+		}
+
+		delete_node(node);
+		--_size;
+		return 1;
+	}
 
     iterator find(const value_type& key) const {
 
@@ -254,7 +315,6 @@ public:
         _size = 0;
     };
 
-
     void swap(Red_Black_Tree &other) {
         node_pointer    tmp_r = _root;
         node_pointer    tmp_l = _nil;
@@ -279,6 +339,55 @@ public:
         other._val_alloc = tmp_v;
         other._comp = tmp_c;
     };
+
+	iterator lower_bound( const value_type& key ) {
+		node_pointer p = _root;
+		node_pointer out = _nil;
+
+		while (p != _nil)
+			if (!_comp(p->data, key))		// p >= key
+				out = p, p = p->left;
+			else
+				p = p->right;
+		return iterator(out, _nil);
+	};
+
+	const_iterator lower_bound( const value_type& key ) const {
+		node_pointer p = _root;
+		node_pointer out = _nil;
+
+		while (p != _nil)
+			if (!_comp(p->data, key))		// p >= key
+				out = p, p = p->left;
+			else
+				p = p->right;
+		return const_iterator(out, _nil);
+	};
+
+	iterator upper_bound( const value_type& key ) {
+		node_pointer p = _root;
+		node_pointer out = _nil;
+
+		while (p != _nil)
+			if (_comp(key, p->data))
+				out = p, p = p->left;
+			else
+				p = p->right;
+		return iterator(out, _nil);
+	};
+
+	const_iterator upper_bound( const value_type& key ) const {
+		node_pointer p = _root;
+		node_pointer out = _nil;
+
+		while (p != _nil)
+			if (_comp(key, p->data))
+				out = p, p = p->left;
+			else
+				p = p->right;
+		return const_iterator(out, _nil);
+	};
+
 
 
 private:
@@ -414,50 +523,6 @@ private:
             u->parent->left = v;
         if (v)
             v->parent = u->parent;
-    }
-
-    //TODO: confirm this
-    int remove(node_pointer node) {
-        node_pointer y = node;
-        node_pointer x;
-        bool o_black = node->is_black;
-
-        if (node == ft_nullptr || node == _nil)
-            return 0;
-
-        if (node->left == _nil) {
-            x = node->right;
-            RB_transplant(node, node->right);
-        } else if (node->right == _nil) {
-            x = node->left;
-            RB_transplant(node, node->left);
-        } else {
-            y = node->right;
-            while (y->left != _nil)
-                y = y->left;
-            o_black = y->is_black;
-            x = y->right;
-            if (y->parent == node && x != _nil)
-                x->parent = y;
-            else {
-                RB_transplant(y, y->right);
-                y->right = node->right;
-                y->right->parent = y;
-            }
-            RB_transplant(node, y);
-            y->left = node->left;
-            y->left->parent = y;
-            y->is_black = node->is_black;
-        }
-        if (o_black)
-            RB_delete_fixup(x);
-        if (_nil->right == node)
-            _nil->right = min();
-        if (_nil->left == node)
-            _nil->left = max();
-        delete_node(node);
-        --_size;
-        return 1;
     }
 
 

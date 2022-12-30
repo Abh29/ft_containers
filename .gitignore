@@ -31,8 +31,7 @@
 *.out
 *.app
 
-main*.cpp
+
 test*.cpp
 test*.c
-tester*/
 old_src/
