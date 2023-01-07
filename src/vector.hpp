@@ -568,7 +568,9 @@ private:
  //Non-member functions
     template< class T, class Alloc >
     bool operator==( const ft::vector<T,Alloc>& lhs, const ft::vector<T,Alloc>& rhs ) {
-        return ft::equal(lhs.begin(), lhs.end(), rhs.begin());
+        if (lhs.empty() && rhs.empty())
+            return true;
+        return lhs.size() == rhs.size() && ft::equal(lhs.begin(), lhs.end(), rhs.begin());
     };
 
     template< class T, class Alloc >
