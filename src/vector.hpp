@@ -58,12 +58,7 @@ public:
     _end(_start),
     _capacity(_start + count)
     {
-        if (ft::is_integral<T>::value) {
-            memset_v(_start, value, count, sizeof(T));
-            _end += count;
-        } else
-            while (_end != _capacity)
-                _allocator.construct(_end++, value);
+		_construct_count(count, value);
     }
 
 
@@ -93,9 +88,7 @@ public:
     _end(_start),
     _capacity(_start + other.size())
     {
-//        reserve(other.size());
-        memcpy(_start, other._start, other.size() * sizeof(T));
-        _end += other.size();
+		_copy_construct<vector::value_type>(other);
     };
 
     //destructor
@@ -206,11 +199,7 @@ public:
 
     //Modifiers
     void clear(){
-        if (ft::is_integral<T>::value)
-            _end = _start;
-        else
-            while(_end != _start)
-                _allocator.destroy(&*(--_end));
+		_clear<T>();
     };
 
     iterator insert(iterator pos, const T& value) {
@@ -262,7 +251,35 @@ public:
 private:
     const_iterator const_begin() {return _start;};
 
-    template<typename InputIt>
+	template< class  ValType>
+	void _copy_construct(const vector& other,
+					   typename ft::enable_if<!ft::is_integral<ValType>::value, ValType>::type* = ft_nullptr) {
+		pointer p = other._start;
+		while (p != other._end)
+			_allocator.construct(_end++, *p++);
+	};
+
+	template< class ValType >
+	void _copy_construct(const vector& other,
+					   typename ft::enable_if<ft::is_integral<ValType>::value, ValType>::type* = ft_nullptr) {
+		memcpy(_start, other._start, other.size() * sizeof(T));
+        _end += other.size();
+	};
+
+	template<class U>
+	void _construct_count(size_type count, U value, typename ft::enable_if<ft::is_integral<U>::value, U>::type* = ft_nullptr) {
+		memset_v(_start, value, count, sizeof(T));
+		_end += count;
+	}
+
+	template<class U>
+	void _construct_count(size_type count, U value, typename ft::enable_if<!ft::is_integral<U>::value, U>::type* = ft_nullptr) {
+		(void) count;
+		while (_end != _capacity)
+			_allocator.construct(_end++, value);
+	}
+
+	template<typename InputIt>
     void _insert_at(pointer pos, InputIt first, InputIt last, typename ft::enable_if<ft::_is_mem_cpy<InputIt>::value, InputIt>::type* = ft_nullptr) {
         size_type n = ft::distance(first, last);
         memcpy(pos, &(*first), n * sizeof(typename ft::iterator_traits<InputIt>::value_type));
@@ -291,7 +308,7 @@ private:
                 --p;
             }
             while (last != first)
-                _allocator.construct(p--, *last--);
+                _allocator.construct(--p, *--last);
         } else {
             p = _start;
             size_type cap = Max(size() + count, 2 * size());
@@ -495,7 +512,7 @@ private:
     template<class U>
     iterator _erase_range(U first, U last,
                           typename ft::enable_if<!ft::is_integral<typename ft::iterator_traits<U>::value_type>::value, U>::type* = ft_nullptr) {
-        size_type count = distance((pointer)first, (pointer) last);
+        size_type count = ft::distance((pointer)first, (pointer) last);
         pointer p = first;
         while (p != last)
             _allocator.destroy(p++);
@@ -510,7 +527,7 @@ private:
     template<class U>
     iterator _erase_range(U first, U last,
                           typename ft::enable_if<ft::is_integral<typename ft::iterator_traits<U>::value_type>::value, U>::type* = ft_nullptr) {
-        size_type count = distance((pointer)first, (pointer) last);
+        size_type count = ft::distance((pointer)first, (pointer) last);
         memmove(first, last, (_end - last) * sizeof(T));
         _end -= count;
         return first;
@@ -562,6 +579,16 @@ private:
 		}
 	};
 
+	template<class U>
+	void _clear(typename ft::enable_if<ft::is_integral<U>::value, U>::type* = ft_nullptr) {
+		_end = _start;
+	}
+
+	template<class U>
+	void _clear(typename ft::enable_if<!ft::is_integral<U>::value, U>::type* = ft_nullptr) {
+		while(_end != _start)
+			_allocator.destroy(&*(--_end));
+	}
 
 };
 
@@ -608,7 +635,7 @@ private:
 namespace std {
 	template< class T, class Alloc >
 	void swap( ft::vector<T,Alloc>& lhs, ft::vector<T,Alloc>& rhs ) {
-		ft::swap(lhs, rhs);
+		lhs.swap(rhs);
 	};
 
 }
