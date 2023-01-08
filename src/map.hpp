@@ -218,7 +218,7 @@ public:
     };
 
 	const_iterator find( const Key& key ) const {
-        return const_iterator(this->find(key).base());
+        return _c.find(ft::pair<key_type, mapped_type>(key, mapped_type()));
     };
 
     ft::pair<iterator,iterator> equal_range( const Key& key ) {
@@ -251,7 +251,7 @@ public:
     const_iterator upper_bound( const Key& key ) const {
 		if (empty())
 			return end();
-		return _c.lower_bound(ft::make_pair(key, begin()->second));
+		return _c.upper_bound(ft::make_pair(key, begin()->second));
     };
 
     //Observers

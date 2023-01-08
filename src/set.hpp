@@ -28,10 +28,15 @@ public:
 	typedef	const value_type&													const_reference;
 	typedef typename Allocator::pointer											pointer;
 	typedef typename Allocator::const_pointer									const_pointer;
+	#if _CORRECT_ITERATOR_SET_
+	typedef	typename Red_Black_Tree<value_type, value_compare>::const_iterator		iterator;
+    typedef typename Red_Black_Tree<value_type, value_compare>::const_reverse_iterator        reverse_iterator;
+	#else
 	typedef	typename Red_Black_Tree<value_type, value_compare>::iterator		iterator;
-	typedef typename Red_Black_Tree<value_type, value_compare>::const_iterator  const_iterator;
     typedef typename Red_Black_Tree<value_type, value_compare>::reverse_iterator        reverse_iterator;
-    typedef typename Red_Black_Tree<value_type, value_compare>::const_reverse_iterator  const_reverse_iterator;
+	#endif
+	typedef typename Red_Black_Tree<value_type, value_compare>::const_iterator  const_iterator;
+	typedef typename Red_Black_Tree<value_type, value_compare>::const_reverse_iterator  const_reverse_iterator;
 
 
 private:
@@ -160,7 +165,7 @@ public:
 	};
 
 	const_iterator find( const Key& key ) const {
-		return const_iterator(_c.find(key).base());
+		return _c.find(key);
 	};
 
 	ft::pair<iterator,iterator> equal_range( const Key& key ) {

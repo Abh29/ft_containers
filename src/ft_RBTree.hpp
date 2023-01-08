@@ -287,7 +287,7 @@ public:
 		return 1;
 	}
 
-    iterator find(const value_type& key) const {
+    iterator find(const value_type& key) {
 
         if (_root == _nil)
             return _nil;
@@ -305,6 +305,23 @@ public:
         return _nil;
     }
 
+	const_iterator find(const value_type& key) const {
+
+		if (_root == _nil)
+			return _nil;
+
+		node_pointer tmp = _root;
+
+		while (tmp != _nil) {
+			if (_comp(key, tmp->data))
+				tmp = tmp->left;
+			else if (_comp(tmp->data, key))
+				tmp = tmp->right;
+			else
+				return tmp;
+		}
+		return _nil;
+	}
 
     void clear() {
         if (_root == _nil)
@@ -595,7 +612,7 @@ private:
 
     void delete_node(node_pointer node) {
         _val_alloc.destroy(&node->data);
-        _node_alloc.destroy(node);
+//        _node_alloc.destroy(node);
         _node_alloc.deallocate(node, 1);
     }
 

@@ -30,6 +30,8 @@ namespace ft {
             second = other.second;
             return *this;
         };
+
+		~pair() {};
     };
 
     template< class T1, class T2 >
@@ -469,7 +471,7 @@ struct random_access_iterator: public ft::iterator< typename ft::iterator_traits
 				_nil(other.nil())
 		{};
 
-        virtual ~RBIterator() {};
+		~RBIterator() {};
 
         RBIterator& operator=(const RBIterator& other) {
             this->_elm = other._elm;
@@ -637,7 +639,7 @@ struct random_access_iterator: public ft::iterator< typename ft::iterator_traits
         };
 
 
-        virtual ~RBConstIterator() {};
+		~RBConstIterator() {};
 
         RBConstIterator& operator=(const RBConstIterator& other) {
             this->_elm = other._elm;
