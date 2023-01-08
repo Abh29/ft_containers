@@ -15,6 +15,12 @@ test:
 	make -C ./tester all
 	./tester/test
 
+test2:
+	make -C ./tester2 all
+
+test3:
+	make -C ./tester3 all
+
 clean:
 	make -C ./tester clean
 	rm -f cmake_install.cmake
