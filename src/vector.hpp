@@ -326,6 +326,8 @@ private:
                 _end = n_end;
                 _capacity = _start + cap;
             } catch (...) {
+                for ( size_type i = 0; i < cap; i++)
+                    _allocator.destroy(n_start + i);    
                 _allocator.deallocate(n_start, cap);
                 throw;
             }
